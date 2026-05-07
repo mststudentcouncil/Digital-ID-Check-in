@@ -14,6 +14,8 @@
     <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); min-height: 100vh; }
@@ -38,13 +40,31 @@
             </div>
         </section>
 
-        <section id="registerPage" class="hidden fade-in glass rounded-2xl p-6 shadow-md">
-            <h2 class="text-xl font-bold text-mstPurple mb-4 text-center">สร้างบัตรประจำตัว</h2>
-            <form id="registerForm" class="space-y-4">
-                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none">
-                <input type="text" id="regClass" placeholder="ชั้น/ห้อง (เช่น 1/1, 4/3) *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none">
-                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์ *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none">
-                <input type="text" id="regStdId" placeholder="รหัสนักเรียน 5 หลัก (ยังไม่มีเว้นว่างได้)" class="w-full p-3 rounded-xl border bg-white/90 outline-none placeholder-orange-400">
+        <section id="registerSearchPage" class="hidden fade-in glass rounded-2xl p-6 shadow-md text-center">
+            <h2 class="text-xl font-black text-mstPurple mb-2">เชื่อมต่อบัตรนักเรียน</h2>
+            <p class="text-sm text-gray-600 mb-6">กรุณากรอกรหัสนักเรียน 5 หลักเพื่อดึงข้อมูลจากเว็บไซต์โรงเรียน</p>
+            
+            <input type="tel" id="searchStdId" placeholder="รหัสนักเรียน 5 หลัก" maxlength="5" class="w-full p-4 rounded-xl border-2 border-white bg-white/80 focus:border-mstPurple text-center tracking-widest font-black text-xl text-gray-800 outline-none mb-4 shadow-inner">
+            
+            <button onclick="searchStudentFromWeb()" class="w-full bg-mstPurple text-white py-3.5 rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition-transform text-lg mb-4">ค้นหาข้อมูล</button>
+            
+            <div class="relative flex py-2 items-center mb-4">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink-0 mx-4 text-gray-400 text-xs">หรือ</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <button onclick="nav('registerManualPage')" class="w-full bg-white text-mstPurple border border-mstPurple py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-colors">ไม่มีรหัสนักเรียน / กรอกข้อมูลเอง</button>
+        </section>
+
+        <section id="registerManualPage" class="hidden fade-in glass rounded-2xl p-6 shadow-md">
+            <button onclick="nav('registerSearchPage')" class="text-gray-500 mb-4 flex items-center gap-1 hover:text-mstPurple"><i class="fas fa-chevron-left"></i> ย้อนกลับ</button>
+            <h2 class="text-xl font-bold text-mstPurple mb-4 text-center">สร้างบัตรแบบกรอกเอง</h2>
+            <form id="registerManualForm" class="space-y-4">
+                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
+                <input type="text" id="regClass" placeholder="ชั้น/ห้อง (เช่น 1/1, 4/3) *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
+                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์ *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
+                <input type="text" id="regStdId" placeholder="รหัสนักเรียน 5 หลัก (ถ้ามี)" class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner placeholder-orange-400">
                 <button type="submit" class="w-full bg-mstPurple text-white py-3.5 rounded-xl font-bold shadow-md mt-4 text-lg">สร้างบัตรทันที</button>
             </form>
         </section>
@@ -83,19 +103,18 @@
 
         <section id="verifyScreen" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-gradient-to-br from-[#f3e5f5] to-[#fffde7]">
             <div class="glass p-8 rounded-[2rem] w-full max-w-md relative fade-in shadow-2xl">
-                <button onclick="$('#verifyScreen').addClass('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 w-8 h-8 flex items-center justify-center bg-white rounded-full"><i class="fas fa-times"></i></button>
+                <button onclick="$('#verifyScreen').addClass('hidden')" class="absolute top-4 right-4 text-gray-400 w-8 h-8 flex items-center justify-center bg-white rounded-full"><i class="fas fa-times"></i></button>
                 <div class="text-center mb-6 mt-4">
                     <h2 class="text-2xl font-black text-mstPurple">ยืนยันตัวตนสภาฯ</h2>
-                    <p class="text-xs text-gray-500 mt-2">กรอกข้อมูลตรงกับระบบ REGIS</p>
                 </div>
                 <form id="verifyForm" class="space-y-5">
                     <div>
-                        <label class="block text-xs font-bold text-mstPurple uppercase mb-2">รหัสนักเรียน (5 หลัก)</label>
-                        <input type="tel" id="v_std_id" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 focus:border-mstPurple text-center tracking-[0.3em] font-black text-xl text-gray-800 outline-none" maxlength="5">
+                        <label class="block text-xs font-bold text-mstPurple mb-2">รหัสนักเรียน (5 หลัก)</label>
+                        <input type="tel" id="v_std_id" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 text-center tracking-[0.3em] font-black text-xl outline-none" maxlength="5">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-mstPurple uppercase mb-2">เลขบัตร ปชช. (13 หลัก)</label>
-                        <input type="tel" id="v_id_card" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 focus:border-mstPurple text-center tracking-[0.2em] font-black text-lg text-gray-800 outline-none" maxlength="13">
+                        <label class="block text-xs font-bold text-mstPurple mb-2">เลขบัตร ปชช. (13 หลัก)</label>
+                        <input type="tel" id="v_id_card" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 text-center tracking-[0.2em] font-black text-lg outline-none" maxlength="13">
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-mstPurple to-[#601cb8] text-mstYellow py-4 rounded-xl font-black shadow-lg mt-4 text-lg">เข้าสู่ระบบ</button>
                 </form>
@@ -110,15 +129,12 @@
                 </div>
                 <button onclick="nav('studentDashboard')" class="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button>
             </div>
-
             <div class="glass rounded-2xl p-6 shadow-md text-center border border-white">
-                <input type="text" id="eventName" placeholder="ตั้งชื่อกิจกรรม (เช่น ปฐมนิเทศ ม.1)" class="w-full p-4 rounded-xl border border-gray-200 bg-white/90 text-center font-bold text-mstPurple mb-4 outline-none focus:border-mstPurple">
-                
-                <button onclick="startScan()" class="w-full bg-mstYellow text-mstPurple py-10 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-all text-2xl flex flex-col items-center justify-center gap-3">
+                <input type="text" id="eventName" placeholder="ตั้งชื่อกิจกรรม (เช่น ปฐมนิเทศ ม.1)" class="w-full p-4 rounded-xl border border-gray-200 bg-white/90 text-center font-bold text-mstPurple mb-4 outline-none">
+                <button onclick="startScan()" class="w-full bg-mstYellow text-mstPurple py-10 rounded-2xl font-black shadow-lg text-2xl flex flex-col items-center justify-center gap-3">
                     <i class="fas fa-qrcode text-5xl"></i> เปิดกล้องสแกน
                 </button>
             </div>
-
             <div class="mt-6 flex gap-3">
                 <button onclick="downloadCSV()" class="flex-1 bg-green-50 text-green-700 border border-green-200 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"><i class="fas fa-file-csv"></i> โหลดไฟล์สรุป (CSV)</button>
             </div>
@@ -160,59 +176,167 @@
 
         async function checkUserStatus() {
             try {
-                const res = await fetch(`${GAS_URL}?action=getUser&uid=${liffProfile.userId}`);
+                const res = await fetch(`${GAS_URL}?action=getUser&uid=${liffProfile.userId}`, { redirect: "follow" });
                 const data = await res.json();
                 if (data.status === 'found') { 
                     userData = data.user; 
                     renderCard();
                     nav('studentDashboard'); 
-                } else { nav('registerPage'); }
+                } else { 
+                    nav('registerSearchPage'); // <--- เด้งมาหน้าค้นหารหัสเว็บ ร.ร. เป็นค่าเริ่มต้น
+                }
             } catch (e) { Swal.fire('Error', 'เชื่อมต่อขัดข้อง', 'error'); }
             hideLoader();
         }
 
-        $('#registerForm').on('submit', async function(e) {
+        // ==========================================
+        // ระบบดึงข้อมูลจากเว็บโรงเรียน (นำเข้าจากโปรเจกต์ e-Voting)
+        // ==========================================
+        async function searchStudentFromWeb() {
+            const searchId = document.getElementById("searchStdId").value.trim();
+            if(!/^\d{5}$/.test(searchId)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
+            
+            setLoader('กำลังดึงข้อมูลจากเว็บ ม.ส.ธ....');
+            
+            try {
+                // 1. ดึงหน้าเว็บโรงเรียนเพื่อหาลิงก์ Excel
+                const targetWebUrl = encodeURIComponent("http://www.mst.ac.th/index.php");
+                const webProxyUrl = `https://mst-proxy.studentcouncil-f38.workers.dev/?url=${targetWebUrl}`;
+                const webResponse = await fetch(webProxyUrl);
+                const webHtml = await webResponse.text();
+                const parser = new DOMParser();
+                const docHtml = parser.parseFromString(webHtml, "text/html");
+                const targetLinkElement = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
+                
+                if(!targetLinkElement) throw new Error("ไม่พบเมนูฐานข้อมูลบนเว็บไซต์โรงเรียน");
+                
+                // 2. โหลดไฟล์ Excel ผ่าน Proxy
+                const sheetUrl = targetLinkElement.href;
+                const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
+                if (!idMatch) throw new Error("รูปแบบลิงก์ฐานข้อมูลไม่ถูกต้อง");
+                
+                const fileId = idMatch[1];
+                const xlsxExportUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
+                const proxyUrl = `https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(xlsxExportUrl)}`;
+                
+                const resp = await fetch(proxyUrl);
+                if(!resp.ok) throw new Error("ดาวน์โหลดไฟล์ Excel ไม่สำเร็จ");
+                const arrayBuffer = await resp.arrayBuffer();
+                
+                // 3. วิเคราะห์ Excel ด้วย xlsx.js
+                const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+                let foundStudent = null;
+                
+                wb.SheetNames.forEach((sn, index) => {
+                    if (foundStudent) return;
+                    const sheetInfo = wb.Workbook?.Sheets?.[index];
+                    if (sheetInfo && sheetInfo.Hidden) return;
+                    
+                    let currentLevel = "ไม่ระบุ"; 
+                    let match = sn.match(/[mม]\.?\s*(\d)/i); 
+                    if(match) currentLevel = `ม.${match[1]}`;
+                    
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
+                    
+                    rows.forEach(r => {
+                        let idx = r.findIndex(c => c.toString().trim() === searchId);
+                        if (idx !== -1) {
+                            let fname = r[idx+2]||""; let lname = r[idx+3]||"";
+                            let fn = (r.length > idx+4 && r[idx+4]) ? r[idx+4].toString().trim() : `${r[idx+1]||""}${fname} ${lname}`.trim();
+                            
+                            let inlineRoom = r.find(c => typeof c==='string' && c.match(/\d+\s?\/\s?\d+/)); 
+                            let currentRoom = inlineRoom ? inlineRoom.match(/\d+\s?\/\s?\d+/)[0].replace(/\s/g, '') : "ไม่ระบุ";
+                            
+                            foundStudent = {
+                                id: searchId,
+                                name: fn.replace(/['"]/g, '').replace(/^(นาย|นางสาว|นาง|น\.ส\.|เด็กชาย|เด็กหญิง|ด\.ช\.|ด\.ญ\.)\s+/g, '$1').trim(),
+                                className: currentRoom.replace('ม.', '') // เปลี่ยน format ให้เข้ากับระบบ Digital ID
+                            };
+                        }
+                    });
+                });
+                
+                hideLoader();
+
+                // 4. แสดง Popup ยืนยันข้อมูล
+                if(foundStudent) {
+                    const { value: phoneNum, isConfirmed } = await Swal.fire({
+                        title: 'พบข้อมูลนักเรียน',
+                        html: `
+                            <div class="bg-purple-50 p-4 rounded-xl text-left text-sm space-y-2 border border-purple-100 mb-4">
+                                <div><span class="font-bold text-mstPurple">รหัสนักเรียน:</span> ${foundStudent.id}</div>
+                                <div><span class="font-bold text-mstPurple">ชื่อ-สกุล:</span> ${foundStudent.name}</div>
+                                <div><span class="font-bold text-mstPurple">ชั้น/ห้อง:</span> ${foundStudent.className}</div>
+                            </div>
+                            <p class="text-sm font-bold text-gray-700 mb-2">กรุณากรอกเบอร์โทรศัพท์เพื่อเสร็จสิ้นการสมัคร</p>
+                        `,
+                        input: 'tel',
+                        inputPlaceholder: '08X-XXX-XXXX',
+                        icon: 'success',
+                        showCancelButton: true, confirmButtonText: 'เชื่อมต่อบัญชี', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4A148C',
+                        inputValidator: (value) => { if (!value) return 'กรุณากรอกเบอร์โทรศัพท์' }
+                    });
+
+                    // 5. บันทึกข้อมูลลง GAS
+                    if(isConfirmed) {
+                        setLoader('กำลังสร้างบัตรดิจิทัล...');
+                        const payload = { action: 'registerUser', uid: liffProfile.userId, name: foundStudent.name, className: foundStudent.className, phone: phoneNum, studentId: foundStudent.id };
+                        await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
+                        checkUserStatus(); // รีเฟรชไปหน้าโชว์บัตร
+                    }
+                } else {
+                    Swal.fire('ไม่พบข้อมูล', 'รหัสนักเรียนนี้ไม่มีในฐานข้อมูลเว็บโรงเรียน โปรดตรวจสอบอีกครั้งหรือเลือก "กรอกข้อมูลด้วยตนเอง"', 'error');
+                }
+                
+            } catch(err) {
+                hideLoader();
+                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเว็บโรงเรียนได้: ' + err.message, 'error');
+            }
+        }
+
+        // ==========================================
+        // การสร้างบัตรแบบกรอกเอง (Manual)
+        // ==========================================
+        $('#registerManualForm').on('submit', async function(e) {
             e.preventDefault(); setLoader('กำลังสร้างบัตร...');
             const payload = { action: 'registerUser', uid: liffProfile.userId, name: $('#regName').val(), className: $('#regClass').val(), phone: $('#regPhone').val(), studentId: $('#regStdId').val() };
             try { 
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json(); 
+                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
+                const data = await res.json(); 
                 if(data.status === 'success') { checkUserStatus(); } 
-            } catch (error) {} 
+            } catch (error) { hideLoader(); Swal.fire('Error', 'บันทึกข้อมูลไม่สำเร็จ', 'error'); } 
         });
 
+        // ==========================================
+        // การทำงานของ Digital ID ทั่วไป (สแกน / อัปเดตรหัส)
+        // ==========================================
         function renderCard() {
             $('#cardName').text(userData.name); $('#cardClass').text("ห้อง " + userData.className);
             $('#cardRef').text(userData.refCode);
-            
-            // ตรวจสอบว่ากรอกรหัส นร. หรือยัง
             if(!userData.studentId || userData.studentId === "") {
                 $('#cardStdId').text('ยังไม่ระบุรหัสนักเรียน'); $('#updateNotice').removeClass('hidden');
             } else {
                 $('#cardStdId').text('รหัสนักเรียน: ' + userData.studentId); $('#updateNotice').addClass('hidden');
             }
-
-            if(qrCodeObj) qrCodeObj.clear();
-            $('#qrcode').empty();
+            if(qrCodeObj) qrCodeObj.clear(); $('#qrcode').empty();
             qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 160, height: 160, colorDark : "#4A148C", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
         }
 
         async function saveNewStdId() {
             const newId = $('#updateStdId').val(); if(!newId) return;
             setLoader('บันทึก...');
-            await fetch(GAS_URL, { method: 'POST', body: JSON.stringify({ action: 'updateProfile', uid: liffProfile.userId, studentId: newId }) });
+            await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'updateProfile', uid: liffProfile.userId, studentId: newId }) });
             userData.studentId = newId; renderCard(); $('#editProfileModal').addClass('hidden'); hideLoader();
             Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success');
         }
 
-        // ฝั่งแอดมิน (ก๊อปปี้ Flow จาก Feedback)
         async function checkAdminAuth() {
             setLoader('ตรวจสอบสิทธิ์...');
             try {
-                const res = await fetch(`${GAS_URL}?action=checkAdminLogin&uid=${liffProfile.userId}`);
+                const res = await fetch(`${GAS_URL}?action=checkAdminLogin&uid=${liffProfile.userId}`, { redirect: "follow" });
                 const data = await res.json();
-                if (data.status === 'found') {
-                    adminName = data.name; $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard');
-                } else { $('#verifyScreen').removeClass('hidden'); }
+                if (data.status === 'found') { adminName = data.name; $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard'); } 
+                else { $('#verifyScreen').removeClass('hidden'); }
             } catch (e) {} hideLoader();
         }
 
@@ -220,17 +344,15 @@
             e.preventDefault(); setLoader('ซิงค์ระบบ...');
             const payload = { action: 'verifyAdmin', uid: liffProfile.userId, std_id: $('#v_std_id').val(), id_card: $('#v_id_card').val() };
             try {
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
-                if (data.status === 'success') {
-                    adminName = data.name; Swal.fire('สำเร็จ', 'ยืนยันตัวตนผ่าน', 'success').then(() => { $('#verifyScreen').addClass('hidden'); $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard'); });
-                } else { Swal.fire('ไม่ผ่าน', 'ข้อมูลไม่ตรงกับฐานข้อมูลสภาฯ', 'error'); }
+                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); const data = await res.json();
+                if (data.status === 'success') { adminName = data.name; Swal.fire('สำเร็จ', 'ยืนยันตัวตนผ่าน', 'success').then(() => { $('#verifyScreen').addClass('hidden'); $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard'); }); } 
+                else { Swal.fire('ไม่ผ่าน', 'ข้อมูลไม่ตรงกับฐานข้อมูลสภาฯ', 'error'); }
             } catch (e) {} hideLoader();
         });
 
         function startScan() {
             const evtName = $('#eventName').val();
             if(!evtName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมก่อนสแกน', 'warning');
-
             if (liff.scanCodeV2) {
                 liff.scanCodeV2().then(result => {
                     const scannedCode = result.value;
@@ -244,19 +366,17 @@
             setLoader('บันทึก...');
             try {
                 const payload = { action: 'recordCheckIn', refCode: refCode, eventName: evtName, adminName: adminName };
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) }); const data = await res.json();
-                if(data.status === 'success') {
-                    Swal.fire({ title: 'เช็กชื่อผ่าน!', text: `${data.student.name} (${data.student.className})`, icon: 'success', timer: 2000, showConfirmButton: false }).then(() => startScan());
-                } else { Swal.fire('ไม่พบผู้ใช้', 'QR Code นี้ไม่พบในระบบ', 'error'); }
+                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); const data = await res.json();
+                if(data.status === 'success') { Swal.fire({ title: 'เช็กชื่อผ่าน!', text: `${data.student.name} (${data.student.className})`, icon: 'success', timer: 2000, showConfirmButton: false }).then(() => startScan()); } 
+                else { Swal.fire('ไม่พบผู้ใช้', 'QR Code นี้ไม่พบในระบบ', 'error'); }
             } catch (e) { Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); }
             hideLoader();
         }
 
         async function downloadCSV() {
             setLoader('สร้างไฟล์...');
-            const res = await fetch(`${GAS_URL}?action=getLogs`); const result = await res.json(); hideLoader();
+            const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); hideLoader();
             if(!result.data || result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการสแกน', 'info');
-            
             let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,RefCode,StudentName,Class,ScannerName\n";
             result.data.forEach(row => { csvContent += `${new Date(row.Timestamp).toLocaleString('th-TH')},${row.EventName},${row.RefCode},${row.StudentName},${row.Class},${row.ScannerName}\n`; });
             const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "MSTSC_Event_Logs.csv");
