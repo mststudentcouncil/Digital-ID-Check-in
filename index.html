@@ -154,6 +154,7 @@
     </main>
 
     <script>
+        // อย่าลืมแก้ไข 2 บรรทัดนี้นะครับ
         const LIFF_ID = "2008923798-Py9KNvvH"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec"; 
         
@@ -182,24 +183,21 @@
                     userData = data.user; 
                     renderCard();
                     nav('studentDashboard'); 
-                } else { 
-                    nav('registerSearchPage'); // <--- เด้งมาหน้าค้นหารหัสเว็บ ร.ร. เป็นค่าเริ่มต้น
-                }
+                } else { nav('registerSearchPage'); }
             } catch (e) { Swal.fire('Error', 'เชื่อมต่อขัดข้อง', 'error'); }
             hideLoader();
         }
 
-        // ==========================================
-        // ระบบดึงข้อมูลจากเว็บโรงเรียน (นำเข้าจากโปรเจกต์ e-Voting)
-        // ==========================================
+        // ============================================================
+        // 🚀 อัปเดตระบบค้นหาชื่อ: ดักจับห้องจากหัวกระดาษ และดึงเลขที่
+        // ============================================================
         async function searchStudentFromWeb() {
             const searchId = document.getElementById("searchStdId").value.trim();
             if(!/^\d{5}$/.test(searchId)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
             
-            setLoader('กำลังดึงข้อมูลจากเว็บ ม.ส.ธ....');
+            setLoader('กำลังวิเคราะห์โครงสร้าง Excel ม.ส.ธ....');
             
             try {
-                // 1. ดึงหน้าเว็บโรงเรียนเพื่อหาลิงก์ Excel
                 const targetWebUrl = encodeURIComponent("http://www.mst.ac.th/index.php");
                 const webProxyUrl = `https://mst-proxy.studentcouncil-f38.workers.dev/?url=${targetWebUrl}`;
                 const webResponse = await fetch(webProxyUrl);
@@ -208,12 +206,11 @@
                 const docHtml = parser.parseFromString(webHtml, "text/html");
                 const targetLinkElement = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
                 
-                if(!targetLinkElement) throw new Error("ไม่พบเมนูฐานข้อมูลบนเว็บไซต์โรงเรียน");
+                if(!targetLinkElement) throw new Error("ไม่พบลิงก์ฐานข้อมูล");
                 
-                // 2. โหลดไฟล์ Excel ผ่าน Proxy
                 const sheetUrl = targetLinkElement.href;
                 const idMatch = sheetUrl.match(/\/d\/([a-zA-Z0-9-_]+)/);
-                if (!idMatch) throw new Error("รูปแบบลิงก์ฐานข้อมูลไม่ถูกต้อง");
+                if (!idMatch) throw new Error("ลิงก์ไม่ใช่ Google Sheets");
                 
                 const fileId = idMatch[1];
                 const xlsxExportUrl = `https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`;
@@ -223,34 +220,38 @@
                 if(!resp.ok) throw new Error("ดาวน์โหลดไฟล์ Excel ไม่สำเร็จ");
                 const arrayBuffer = await resp.arrayBuffer();
                 
-                // 3. วิเคราะห์ Excel ด้วย xlsx.js
                 const wb = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
                 let foundStudent = null;
                 
                 wb.SheetNames.forEach((sn, index) => {
                     if (foundStudent) return;
-                    const sheetInfo = wb.Workbook?.Sheets?.[index];
-                    if (sheetInfo && sheetInfo.Hidden) return;
-                    
-                    let currentLevel = "ไม่ระบุ"; 
-                    let match = sn.match(/[mม]\.?\s*(\d)/i); 
-                    if(match) currentLevel = `ม.${match[1]}`;
+                    if (wb.Workbook?.Sheets?.[index]?.Hidden) return;
                     
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
+                    let currentRoom = "ไม่ระบุ"; // <-- ตัวแปรเก็บห้องแบบคงสถานะข้ามบรรทัด
                     
                     rows.forEach(r => {
+                        // 1. ดักจับแถวที่มีคำว่าห้อง (เช่น "ชั้นมัธยมศึกษาปีที่ 4/1" หรือ "ม.4/1")
+                        let roomMatchCell = r.find(c => typeof c==='string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/));
+                        if(roomMatchCell) {
+                            let cleanRoom = roomMatchCell.match(/(\d+\s?\/\s?\d+)/)[1].replace(/\s/g, '');
+                            currentRoom = cleanRoom;
+                        }
+                        
+                        // 2. ดักจับบรรทัดที่มีรหัสนักเรียนตรงกัน
                         let idx = r.findIndex(c => c.toString().trim() === searchId);
                         if (idx !== -1) {
+                            // ดึงเลขที่ (ปกติคอลัมน์เลขที่จะอยู่ก่อนหน้ารหัส 1 ช่อง)
+                            let studentNum = idx > 0 ? r[idx-1].toString().trim() : "-";
+                            
                             let fname = r[idx+2]||""; let lname = r[idx+3]||"";
                             let fn = (r.length > idx+4 && r[idx+4]) ? r[idx+4].toString().trim() : `${r[idx+1]||""}${fname} ${lname}`.trim();
                             
-                            let inlineRoom = r.find(c => typeof c==='string' && c.match(/\d+\s?\/\s?\d+/)); 
-                            let currentRoom = inlineRoom ? inlineRoom.match(/\d+\s?\/\s?\d+/)[0].replace(/\s/g, '') : "ไม่ระบุ";
-                            
                             foundStudent = {
                                 id: searchId,
+                                number: studentNum,
                                 name: fn.replace(/['"]/g, '').replace(/^(นาย|นางสาว|นาง|น\.ส\.|เด็กชาย|เด็กหญิง|ด\.ช\.|ด\.ญ\.)\s+/g, '$1').trim(),
-                                className: currentRoom.replace('ม.', '') // เปลี่ยน format ให้เข้ากับระบบ Digital ID
+                                className: currentRoom
                             };
                         }
                     });
@@ -258,61 +259,65 @@
                 
                 hideLoader();
 
-                // 4. แสดง Popup ยืนยันข้อมูล
                 if(foundStudent) {
                     const { value: phoneNum, isConfirmed } = await Swal.fire({
                         title: 'พบข้อมูลนักเรียน',
                         html: `
                             <div class="bg-purple-50 p-4 rounded-xl text-left text-sm space-y-2 border border-purple-100 mb-4">
-                                <div><span class="font-bold text-mstPurple">รหัสนักเรียน:</span> ${foundStudent.id}</div>
-                                <div><span class="font-bold text-mstPurple">ชื่อ-สกุล:</span> ${foundStudent.name}</div>
-                                <div><span class="font-bold text-mstPurple">ชั้น/ห้อง:</span> ${foundStudent.className}</div>
+                                <div class="flex justify-between"><span class="font-bold text-mstPurple">รหัสนักเรียน:</span> ${foundStudent.id}</div>
+                                <div class="flex justify-between"><span class="font-bold text-mstPurple">ชื่อ-สกุล:</span> ${foundStudent.name}</div>
+                                <div class="flex justify-between border-t border-purple-200 mt-2 pt-2">
+                                    <span><span class="font-bold text-mstPurple">ชั้น:</span> ${foundStudent.className}</span>
+                                    <span><span class="font-bold text-mstPurple">เลขที่:</span> ${foundStudent.number}</span>
+                                </div>
                             </div>
-                            <p class="text-sm font-bold text-gray-700 mb-2">กรุณากรอกเบอร์โทรศัพท์เพื่อเสร็จสิ้นการสมัคร</p>
+                            <p class="text-sm font-bold text-gray-700 mb-2">กรอกเบอร์โทรศัพท์เพื่อเสร็จสิ้นการผูกบัญชี</p>
                         `,
                         input: 'tel',
                         inputPlaceholder: '08X-XXX-XXXX',
-                        icon: 'success',
-                        showCancelButton: true, confirmButtonText: 'เชื่อมต่อบัญชี', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4A148C',
+                        icon: 'success', showCancelButton: true, confirmButtonText: 'ผูกบัตรดิจิทัล', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4A148C',
                         inputValidator: (value) => { if (!value) return 'กรุณากรอกเบอร์โทรศัพท์' }
                     });
 
-                    // 5. บันทึกข้อมูลลง GAS
                     if(isConfirmed) {
-                        setLoader('กำลังสร้างบัตรดิจิทัล...');
-                        const payload = { action: 'registerUser', uid: liffProfile.userId, name: foundStudent.name, className: foundStudent.className, phone: phoneNum, studentId: foundStudent.id };
+                        setLoader('กำลังสร้างบัตร...');
+                        const payload = { action: 'registerUser', uid: liffProfile.userId, name: foundStudent.name, className: foundStudent.className, phone: phoneNum, studentId: foundStudent.id, studentNum: foundStudent.number };
                         await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
-                        checkUserStatus(); // รีเฟรชไปหน้าโชว์บัตร
+                        checkUserStatus(); 
                     }
                 } else {
-                    Swal.fire('ไม่พบข้อมูล', 'รหัสนักเรียนนี้ไม่มีในฐานข้อมูลเว็บโรงเรียน โปรดตรวจสอบอีกครั้งหรือเลือก "กรอกข้อมูลด้วยตนเอง"', 'error');
+                    Swal.fire('ไม่พบข้อมูล', 'โปรดตรวจสอบรหัสอีกครั้ง หรือเลือก "กรอกข้อมูลด้วยตนเอง"', 'error');
                 }
                 
-            } catch(err) {
-                hideLoader();
-                Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเว็บโรงเรียนได้: ' + err.message, 'error');
-            }
+            } catch(err) { hideLoader(); Swal.fire('เกิดข้อผิดพลาด', 'เชื่อมต่อเว็บขัดข้อง: ' + err.message, 'error'); }
         }
 
         // ==========================================
         // การสร้างบัตรแบบกรอกเอง (Manual)
         // ==========================================
+        // แก้ไข HTML เพิ่มช่องเลขที่ก่อนใช้งาน
+        if(!document.getElementById('regNum')) {
+            $('#regPhone').after('<input type="number" id="regNum" placeholder="เลขที่ *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner mt-4">');
+        }
+
         $('#registerManualForm').on('submit', async function(e) {
             e.preventDefault(); setLoader('กำลังสร้างบัตร...');
-            const payload = { action: 'registerUser', uid: liffProfile.userId, name: $('#regName').val(), className: $('#regClass').val(), phone: $('#regPhone').val(), studentId: $('#regStdId').val() };
+            const payload = { action: 'registerUser', uid: liffProfile.userId, name: $('#regName').val(), className: $('#regClass').val(), phone: $('#regPhone').val(), studentId: $('#regStdId').val(), studentNum: $('#regNum').val() };
             try { 
-                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
-                const data = await res.json(); 
-                if(data.status === 'success') { checkUserStatus(); } 
-            } catch (error) { hideLoader(); Swal.fire('Error', 'บันทึกข้อมูลไม่สำเร็จ', 'error'); } 
+                await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
+                checkUserStatus(); 
+            } catch (error) { hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); } 
         });
 
         // ==========================================
-        // การทำงานของ Digital ID ทั่วไป (สแกน / อัปเดตรหัส)
+        // การโชว์บัตรและการ Export CSV ของสภาฯ
         // ==========================================
         function renderCard() {
-            $('#cardName').text(userData.name); $('#cardClass').text("ห้อง " + userData.className);
+            $('#cardName').text(userData.name); 
+            // โชว์ ชั้น/ห้อง คู่กับ เลขที่ เลย
+            $('#cardClass').html(`ชั้น <span class="font-black">${userData.className}</span> | เลขที่ <span class="font-black">${userData.studentNum}</span>`);
             $('#cardRef').text(userData.refCode);
+            
             if(!userData.studentId || userData.studentId === "") {
                 $('#cardStdId').text('ยังไม่ระบุรหัสนักเรียน'); $('#updateNotice').removeClass('hidden');
             } else {
@@ -367,7 +372,7 @@
             try {
                 const payload = { action: 'recordCheckIn', refCode: refCode, eventName: evtName, adminName: adminName };
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); const data = await res.json();
-                if(data.status === 'success') { Swal.fire({ title: 'เช็กชื่อผ่าน!', text: `${data.student.name} (${data.student.className})`, icon: 'success', timer: 2000, showConfirmButton: false }).then(() => startScan()); } 
+                if(data.status === 'success') { Swal.fire({ title: 'เช็กชื่อผ่าน!', text: `เลขที่ ${data.student.studentNum} | ${data.student.name} (${data.student.className})`, icon: 'success', timer: 2000, showConfirmButton: false }).then(() => startScan()); } 
                 else { Swal.fire('ไม่พบผู้ใช้', 'QR Code นี้ไม่พบในระบบ', 'error'); }
             } catch (e) { Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); }
             hideLoader();
@@ -377,8 +382,12 @@
             setLoader('สร้างไฟล์...');
             const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); hideLoader();
             if(!result.data || result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการสแกน', 'info');
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,RefCode,StudentName,Class,ScannerName\n";
-            result.data.forEach(row => { csvContent += `${new Date(row.Timestamp).toLocaleString('th-TH')},${row.EventName},${row.RefCode},${row.StudentName},${row.Class},${row.ScannerName}\n`; });
+            
+            // อัปเดตโครงสร้าง CSV ให้มีเลขที่ และ รหัสนักเรียน ครบถ้วน!
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
+            result.data.forEach(row => { 
+                csvContent += `${new Date(row.Timestamp).toLocaleString('th-TH')},${row.EventName},${row.RefCode},${row.StudentName},${row.Class},${row.StudentNum},${row.StudentID},${row.ScannerName}\n`; 
+            });
             const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "MSTSC_Event_Logs.csv");
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
