@@ -2,9 +2,9 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Digital ID & Check-in</title>
-    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = { theme: { extend: { fontFamily: { anuphan: ['Anuphan', 'sans-serif'] }, colors: { mstPurple: '#4A148C', mstYellow: '#FFC107', mstCream: '#FFF9C4', lineGreen: '#06C755' } } } }
@@ -18,152 +18,209 @@
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
-        body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); min-height: 100vh; }
-        .glass { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); }
-        .loader-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(5px); z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-        .fade-in { animation: fadeIn 0.4s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        /* ซ่อนขอบกล้อง */
-        #reader { border-radius: 1rem; overflow: hidden; border: none !important; }
+        body { font-family: 'Anuphan', sans-serif; background: #f3e5f5; min-height: 100vh; }
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 8px 32px 0 rgba(74, 20, 140, 0.08); }
+        .loader-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); z-index: 999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        .fade-in { animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* ซ่อนขอบและปรับแต่งกล้อง */
+        #reader { border-radius: 1.5rem; overflow: hidden; border: none !important; background: #000; box-shadow: inset 0 0 20px rgba(0,0,0,0.5); }
         #reader video { object-fit: cover; }
+        .radio-btn:checked + div { background-color: #4A148C; border-color: #4A148C; color: white; }
     </style>
 </head>
 <body class="text-gray-800 antialiased pb-10">
 
-    <div id="globalLoader" class="loader-overlay"><i class="fas fa-circle-notch fa-spin text-5xl text-mstPurple mb-4"></i><p class="text-lg font-bold text-mstPurple" id="loaderText">กำลังโหลดข้อมูล...</p></div>
+    <div id="globalLoader" class="loader-overlay"><div class="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-mstPurple mb-4"></div><p class="text-lg font-bold text-mstPurple tracking-wide" id="loaderText">กำลังโหลดข้อมูล...</p></div>
 
     <main class="max-w-md mx-auto px-4 pt-6" id="mainContainer">
         
         <section id="loginPage" class="hidden fade-in flex flex-col items-center justify-center min-h-[80vh]">
-            <div class="glass rounded-3xl p-8 text-center w-full shadow-lg">
-                <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="w-24 h-24 mx-auto mb-4 drop-shadow-xl" alt="MSTSC Logo">
-                <h2 class="text-2xl font-black text-mstPurple mb-1">DIGITAL ID</h2>
-                <p class="text-sm font-bold text-gray-600 mb-6">STUDENT COUNCIL</p>
-                <button onclick="liff.login()" class="w-full bg-lineGreen text-white py-3.5 rounded-xl font-bold shadow-lg hover:opacity-90 flex items-center justify-center gap-3 text-lg"><i class="fab fa-line text-2xl"></i> เข้าสู่ระบบด้วย LINE</button>
+            <div class="glass rounded-[2rem] p-8 text-center w-full relative overflow-hidden">
+                <div class="absolute -top-10 -right-10 w-32 h-32 bg-mstYellow rounded-full opacity-20 blur-2xl"></div>
+                <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="w-28 h-28 mx-auto mb-6 drop-shadow-2xl relative z-10">
+                <h2 class="text-3xl font-black text-mstPurple mb-1 tracking-tight">DIGITAL ID</h2>
+                <p class="text-xs font-bold text-gray-400 mb-8 tracking-[0.2em]">STUDENT COUNCIL</p>
+                <button onclick="liff.login()" class="w-full bg-[#06C755] text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg"><i class="fab fa-line text-2xl"></i> ดำเนินการต่อด้วย LINE</button>
             </div>
         </section>
 
-        <section id="registerSearchPage" class="hidden fade-in glass rounded-2xl p-6 shadow-md text-center">
-            <h2 class="text-xl font-black text-mstPurple mb-2">เชื่อมต่อบัตรนักเรียน</h2>
-            <p class="text-sm text-gray-600 mb-6">กรุณากรอกรหัสนักเรียน 5 หลักเพื่อดึงข้อมูลจากเว็บไซต์โรงเรียน</p>
-            <input type="tel" id="searchStdId" placeholder="รหัสนักเรียน 5 หลัก" maxlength="5" class="w-full p-4 rounded-xl border-2 border-white bg-white/80 focus:border-mstPurple text-center tracking-widest font-black text-xl outline-none mb-4 shadow-inner">
-            <button onclick="searchStudentFromWeb()" class="w-full bg-mstPurple text-white py-3.5 rounded-xl font-bold shadow-md hover:-translate-y-0.5 transition-transform text-lg mb-4">ค้นหาข้อมูล</button>
-            <div class="relative flex py-2 items-center mb-4"><div class="flex-grow border-t border-gray-300"></div><span class="flex-shrink-0 mx-4 text-gray-400 text-xs">หรือ</span><div class="flex-grow border-t border-gray-300"></div></div>
-            <button onclick="nav('registerManualPage')" class="w-full bg-white text-mstPurple border border-mstPurple py-3.5 rounded-xl font-bold hover:bg-purple-50 transition-colors">ไม่มีรหัสนักเรียน / กรอกข้อมูลเอง</button>
+        <section id="registerSearchPage" class="hidden fade-in">
+            <div class="bg-white rounded-[2rem] p-8 shadow-xl text-center relative overflow-hidden mt-4">
+                <div class="w-16 h-16 bg-purple-50 text-mstPurple rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-id-card text-2xl"></i></div>
+                <h2 class="text-2xl font-black text-gray-900 mb-2">เชื่อมต่อบัญชี</h2>
+                <p class="text-sm text-gray-500 mb-8">กรอกรหัสนักเรียน 5 หลักเพื่อดึงข้อมูลจากระบบ</p>
+                
+                <input type="tel" id="searchStdId" placeholder="รหัสนักเรียน" maxlength="5" class="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:bg-white focus:border-mstPurple text-center tracking-[0.3em] font-black text-2xl text-mstPurple outline-none mb-6 transition-all">
+                
+                <button onclick="searchStudentFromWeb()" class="w-full bg-gradient-to-r from-mstPurple to-[#601cb8] text-white py-4 rounded-2xl font-bold shadow-lg shadow-purple-200 hover:-translate-y-1 transition-all text-lg mb-4">ค้นหาข้อมูล</button>
+            </div>
+            
+            <div class="text-center mt-6">
+                <button onclick="nav('registerManualPage')" class="text-xs text-gray-400 font-bold hover:text-mstPurple underline underline-offset-4 decoration-dotted">ไม่มีรหัสนักเรียนใช่หรือไม่? (กรอกด้วยตนเอง)</button>
+            </div>
         </section>
 
-        <section id="registerManualPage" class="hidden fade-in glass rounded-2xl p-6 shadow-md">
-            <button onclick="nav('registerSearchPage')" class="text-gray-500 mb-4 flex items-center gap-1 hover:text-mstPurple"><i class="fas fa-chevron-left"></i> ย้อนกลับ</button>
-            <h2 class="text-xl font-bold text-mstPurple mb-4 text-center">สร้างบัตรแบบกรอกเอง</h2>
+        <section id="foundStudentPage" class="hidden fixed inset-0 bg-white z-[100] flex-col fade-in">
+            <div class="flex-1 overflow-y-auto p-6 pt-12 text-center relative">
+                <div class="absolute top-0 left-0 w-full h-40 bg-gradient-to-b from-purple-50 to-white -z-10"></div>
+                <div class="w-24 h-24 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner"><i class="fas fa-check text-4xl"></i></div>
+                <h2 class="text-2xl font-black text-gray-900 mb-2">พบข้อมูลของคุณ</h2>
+                <p class="text-gray-500 text-sm mb-8">โปรดตรวจสอบความถูกต้องของข้อมูล</p>
+                
+                <div class="bg-white border border-gray-100 shadow-lg shadow-purple-100/50 rounded-3xl p-6 text-left space-y-4 mb-8">
+                    <div><p class="text-xs text-gray-400 font-bold uppercase">รหัสนักเรียน</p><p class="text-xl font-black text-mstPurple font-mono" id="fs_id">-</p></div>
+                    <div><p class="text-xs text-gray-400 font-bold uppercase">ชื่อ-นามสกุล</p><p class="text-lg font-bold text-gray-800" id="fs_name">-</p></div>
+                    <div class="flex border-t border-gray-100 pt-4 mt-2">
+                        <div class="flex-1"><p class="text-xs text-gray-400 font-bold uppercase">ชั้นเรียน</p><p class="text-lg font-bold text-gray-800" id="fs_class">-</p></div>
+                        <div class="flex-1 border-l border-gray-100 pl-4"><p class="text-xs text-gray-400 font-bold uppercase">เลขที่</p><p class="text-lg font-bold text-gray-800" id="fs_num">-</p></div>
+                    </div>
+                </div>
+
+                <div class="text-left bg-purple-50 p-5 rounded-2xl mb-6">
+                    <label class="block text-xs font-bold text-mstPurple mb-2">เบอร์โทรศัพท์ (สำหรับติดต่อ)</label>
+                    <input type="tel" id="fs_phone" placeholder="08X-XXX-XXXX" class="w-full p-3.5 rounded-xl border-none shadow-inner text-sm font-bold outline-none text-gray-800">
+                </div>
+            </div>
+            <div class="p-4 bg-white border-t border-gray-100 flex gap-3">
+                <button onclick="$('#foundStudentPage').addClass('hidden'); nav('registerSearchPage');" class="w-1/3 bg-gray-100 text-gray-600 py-4 rounded-2xl font-bold">ยกเลิก</button>
+                <button onclick="confirmLinkStudent()" class="w-2/3 bg-mstPurple text-white py-4 rounded-2xl font-bold shadow-lg">เชื่อมต่อบัญชี</button>
+            </div>
+        </section>
+
+        <section id="registerManualPage" class="hidden fade-in glass rounded-[2rem] p-6 shadow-md mt-4">
+            <button onclick="nav('registerSearchPage')" class="text-gray-400 mb-6 flex items-center gap-2 font-bold text-sm hover:text-mstPurple"><i class="fas fa-chevron-left"></i> ย้อนกลับ</button>
+            <h2 class="text-xl font-black text-gray-900 mb-6 text-center">สร้างบัตรแบบกรอกเอง</h2>
             <form id="registerManualForm" class="space-y-4">
-                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
-                <input type="text" id="regClass" placeholder="ชั้น/ห้อง (เช่น 1/1, 4/3) *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
-                <input type="number" id="regNum" placeholder="เลขที่ *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
-                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์ *" required class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner">
-                <input type="text" id="regStdId" placeholder="รหัสนักเรียน 5 หลัก (ถ้ามี)" class="w-full p-3 rounded-xl border bg-white/90 outline-none shadow-inner placeholder-orange-400">
-                <button type="submit" class="w-full bg-mstPurple text-white py-3.5 rounded-xl font-bold shadow-md mt-4 text-lg">สร้างบัตรทันที</button>
+                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล (มีคำนำหน้า) *" required class="w-full p-4 rounded-xl border border-gray-200 bg-white/80 outline-none text-sm font-bold">
+                <div class="flex gap-3">
+                    <input type="text" id="regClass" placeholder="ชั้น (เช่น ม.6/5) *" required class="w-full p-4 rounded-xl border border-gray-200 bg-white/80 outline-none text-sm font-bold flex-1">
+                    <input type="number" id="regNum" placeholder="เลขที่ *" required class="w-full p-4 rounded-xl border border-gray-200 bg-white/80 outline-none text-sm font-bold w-1/3">
+                </div>
+                <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์ *" required class="w-full p-4 rounded-xl border border-gray-200 bg-white/80 outline-none text-sm font-bold">
+                <input type="text" id="regStdId" placeholder="รหัสนักเรียน 5 หลัก (ถ้าไม่มีให้เว้นว่าง)" class="w-full p-4 rounded-xl border border-gray-200 bg-white/80 outline-none text-sm font-bold placeholder-orange-400">
+                <button type="submit" class="w-full bg-mstPurple text-white py-4 rounded-xl font-bold shadow-md mt-6 text-lg">ยืนยันข้อมูล</button>
             </form>
         </section>
 
         <section id="studentDashboard" class="hidden fade-in">
-            <div id="updateNotice" class="hidden bg-mstYellow/20 border border-mstYellow rounded-xl p-4 mb-4 flex items-start gap-3">
-                <i class="fas fa-bell text-yellow-600 mt-1"></i>
-                <div>
-                    <p class="text-sm font-bold text-yellow-800">อัปเดตข้อมูลของคุณด่วน!</p>
-                    <p class="text-xs text-yellow-700 mb-2">คุณยังไม่ได้ระบุรหัสนักเรียน อย่าลืมมาอัปเดตนะ</p>
-                    <button onclick="$('#editProfileModal').removeClass('hidden')" class="bg-yellow-600 text-white text-xs px-3 py-1.5 rounded-lg font-bold">อัปเดตรหัสตอนนี้</button>
+            <div id="updateNotice" class="hidden bg-orange-50 border border-orange-200 rounded-2xl p-4 mb-4 flex items-start gap-3 shadow-sm">
+                <div class="w-8 h-8 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-exclamation"></i></div>
+                <div class="flex-1">
+                    <p class="text-sm font-bold text-orange-800">โปรดอัปเดตรหัสนักเรียน</p>
+                    <p class="text-xs text-orange-600 mb-2 mt-0.5">คุณยังไม่ได้ระบุรหัส เพื่อสิทธิประโยชน์ที่ครบถ้วน</p>
+                    <button onclick="$('#editProfileModal').removeClass('hidden')" class="bg-orange-500 text-white text-xs px-4 py-2 rounded-xl font-bold shadow-sm">อัปเดตรหัสทันที</button>
                 </div>
             </div>
 
-            <div class="glass rounded-3xl p-6 text-center shadow-lg relative overflow-hidden border border-white">
-                <div class="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-mstPurple to-[#7E57C2] rounded-t-3xl -z-10"></div>
-                <img id="profileImage" src="" class="w-24 h-24 rounded-full border-4 border-mstYellow shadow-md mx-auto mt-4 object-cover bg-white">
-                <h2 id="cardName" class="text-xl font-black text-gray-800 mt-3"></h2>
-                <p id="cardClass" class="text-mstPurple font-bold text-sm bg-purple-100 px-3 py-1 rounded-full inline-block mt-1"></p>
-                <p id="cardStdId" class="text-gray-500 font-mono text-xs mt-2"></p>
-
-                <div class="bg-white p-4 rounded-2xl shadow-inner mt-6 border border-gray-100 inline-block">
-                    <div id="qrcode" class="mx-auto flex justify-center"></div>
+            <div class="bg-white rounded-[2.5rem] p-6 text-center shadow-xl border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-mstPurple via-[#7E57C2] to-indigo-600 rounded-b-[3rem] -z-10"></div>
+                <img id="profileImage" src="" class="w-24 h-24 rounded-full border-4 border-white shadow-lg mx-auto mt-6 object-cover bg-gray-100">
+                <h2 id="cardName" class="text-xl font-black text-gray-900 mt-4 leading-tight"></h2>
+                <div class="inline-flex items-center gap-2 bg-purple-50 text-mstPurple font-bold text-xs px-4 py-1.5 rounded-full mt-2 border border-purple-100">
+                    <span id="cardClass"></span><span class="w-1 h-1 bg-purple-300 rounded-full"></span><span id="cardStdId" class="font-mono tracking-wider"></span>
                 </div>
-                <p class="text-xs text-gray-500 mt-4"><i class="fas fa-qrcode text-mstPurple"></i> สแกนเพื่อเข้ากิจกรรม / สะสมแต้ม</p>
+
+                <div class="bg-gray-50 p-5 rounded-3xl shadow-inner mt-8 border border-gray-100 inline-block w-48 h-48 flex items-center justify-center relative">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-mstPurple to-pink-500 rounded-[2rem] blur opacity-20"></div>
+                    <div id="qrcode" class="relative z-10"></div>
+                </div>
+                <p id="cardRef" class="text-[10px] text-gray-400 mt-3 font-mono tracking-widest bg-gray-50 inline-block px-3 py-1 rounded-lg"></p>
                 
-                <button onclick="loadMyHistory()" class="w-full mt-5 bg-purple-50 hover:bg-purple-100 text-mstPurple font-bold py-3 rounded-xl border border-purple-200 transition-colors flex items-center justify-center gap-2">
-                    <i class="fas fa-history"></i> ดูประวัติการเข้าร่วมกิจกรรม
-                </button>
+                <div class="mt-8 flex gap-3">
+                    <button onclick="loadMyHistory()" class="flex-1 bg-gray-50 hover:bg-purple-50 text-mstPurple font-bold py-3.5 rounded-2xl border border-gray-200 transition-colors flex flex-col items-center justify-center gap-1">
+                        <i class="fas fa-history text-lg"></i> <span class="text-[10px] uppercase tracking-wider">ประวัติ</span>
+                    </button>
+                    <button onclick="checkAdminAuth()" class="flex-1 bg-gray-50 hover:bg-yellow-50 text-yellow-600 font-bold py-3.5 rounded-2xl border border-gray-200 transition-colors flex flex-col items-center justify-center gap-1">
+                        <i class="fas fa-shield-alt text-lg"></i> <span class="text-[10px] uppercase tracking-wider">แอดมิน</span>
+                    </button>
+                </div>
             </div>
 
-            <div class="mt-6 flex justify-between items-center gap-3">
-                <button onclick="checkAdminAuth()" class="flex-1 glass text-xs text-mstPurple font-bold py-3 rounded-xl hover:bg-white transition-all shadow-sm">
-                    <i class="fas fa-shield-alt mr-1"></i> สำหรับสภาฯ
-                </button>
-                <button onclick="liff.logout(); window.location.reload();" class="glass text-xs text-red-500 font-bold py-3 px-4 rounded-xl hover:bg-red-50 shadow-sm"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-        </section>
-
-        <section id="verifyScreen" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-gradient-to-br from-[#f3e5f5] to-[#fffde7]">
-            <div class="glass p-8 rounded-[2rem] w-full max-w-md relative fade-in shadow-2xl">
-                <button onclick="$('#verifyScreen').addClass('hidden')" class="absolute top-4 right-4 text-gray-400 w-8 h-8 flex items-center justify-center bg-white rounded-full"><i class="fas fa-times"></i></button>
-                <div class="text-center mb-6 mt-4"><h2 class="text-2xl font-black text-mstPurple">ยืนยันตัวตนสภาฯ</h2></div>
-                <form id="verifyForm" class="space-y-5">
-                    <input type="tel" id="v_std_id" placeholder="รหัสนักเรียน (5 หลัก)" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 text-center tracking-[0.3em] font-black text-xl outline-none" maxlength="5">
-                    <input type="tel" id="v_id_card" placeholder="เลขบัตร ปชช. (13 หลัก)" required class="w-full p-4 rounded-xl border-2 border-white bg-white/80 text-center tracking-[0.2em] font-black text-lg outline-none" maxlength="13">
-                    <button type="submit" class="w-full bg-gradient-to-r from-mstPurple to-[#601cb8] text-mstYellow py-4 rounded-xl font-black shadow-lg mt-4 text-lg">เข้าสู่ระบบ</button>
-                </form>
+            <div class="mt-6 text-center">
+                <button onclick="liff.logout(); window.location.reload();" class="text-xs text-gray-400 font-bold hover:text-red-500 transition-colors underline decoration-dotted"><i class="fas fa-sign-out-alt"></i> ออกจากระบบบนอุปกรณ์นี้</button>
             </div>
         </section>
 
         <section id="adminDashboard" class="hidden fade-in pb-10">
-            <div class="glass rounded-2xl p-5 mb-5 flex justify-between items-center border border-white">
-                <div>
-                    <h2 class="font-black text-mstPurple text-lg">Scanner Panel</h2>
-                    <p class="text-xs font-bold text-gray-500" id="showAdminName"></p>
+            <div class="bg-mstPurple text-white rounded-3xl p-6 mb-4 shadow-lg relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                <div class="flex justify-between items-start relative z-10">
+                    <div><h2 class="font-black text-2xl mb-1">Scanner Panel</h2><p class="text-xs text-purple-200 font-bold" id="showAdminName"></p></div>
+                    <button onclick="exitAdmin()" class="bg-white/20 w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-sm"><i class="fas fa-times"></i></button>
                 </div>
-                <button onclick="exitAdmin()" class="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center text-gray-500"><i class="fas fa-times"></i></button>
             </div>
 
-            <div class="glass rounded-2xl p-6 shadow-md text-center border border-white mb-5">
-                <input type="text" id="eventName" placeholder="ตั้งชื่อกิจกรรม (เช่น ปฐมนิเทศ ม.1)" class="w-full p-4 rounded-xl border border-gray-200 bg-white/90 text-center font-bold text-mstPurple mb-4 outline-none">
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-4">
+                <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">ชื่อกิจกรรม</label>
+                <input type="text" id="eventName" placeholder="เช่น กีฬาสี, เลือกตั้ง" class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 font-bold mb-4 outline-none focus:border-mstPurple focus:bg-white transition-colors">
                 
-                <div id="scannerSection" class="hidden relative mb-4">
-                    <div id="reader" class="w-full shadow-inner bg-black"></div>
-                    <p class="text-xs text-gray-500 mt-2 font-bold animate-pulse">กำลังเปิดใช้งานกล้อง (สแกนได้ต่อเนื่อง)</p>
+                <label class="block text-xs font-bold text-gray-500 mb-1 ml-1">จุดสแกน / ฐานกิจกรรม</label>
+                <input type="text" id="stationName" placeholder="เช่น ฐานที่ 1, ประตูหน้า" class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-900 font-bold mb-4 outline-none focus:border-mstPurple focus:bg-white transition-colors">
+                
+                <label class="block text-xs font-bold text-gray-500 mb-2 ml-1">ประเภทการสแกน</label>
+                <div class="flex gap-2 mb-2">
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
+                        <div class="border-2 border-gray-200 text-gray-500 rounded-xl p-3 text-center font-black transition-all">IN (เข้า)</div>
+                    </label>
+                    <label class="flex-1 cursor-pointer">
+                        <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
+                        <div class="border-2 border-gray-200 text-gray-500 rounded-xl p-3 text-center font-black transition-all">OUT (ออก)</div>
+                    </label>
                 </div>
+            </div>
 
-                <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-mstYellow text-mstPurple py-6 rounded-2xl font-black shadow-lg text-xl flex items-center justify-center gap-3">
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-4 text-center">
+                <div id="scannerSection" class="hidden relative mb-4">
+                    <div id="reader" class="w-full bg-black aspect-square"></div>
+                    <p class="text-xs text-mstPurple mt-3 font-bold animate-pulse"><i class="fas fa-dot-circle"></i> กล้องเปิดทำงาน สแกนต่อเนื่องได้เลย</p>
+                </div>
+                <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-indigo-600 text-white py-6 rounded-2xl font-black shadow-lg text-xl flex items-center justify-center gap-3 hover:-translate-y-1 transition-transform">
                     <i class="fas fa-qrcode text-3xl"></i> เปิดโหมดกล้องสแกน
                 </button>
             </div>
 
-            <div class="glass rounded-2xl p-5 shadow-md border border-white mb-5">
-                <h3 class="text-sm font-bold text-mstPurple mb-3"><i class="fas fa-keyboard"></i> เช็กชื่อด้วยรหัสนักเรียน (กรณีสแกนไม่ได้)</h3>
+            <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-4">
                 <div class="flex gap-2">
-                    <input type="tel" id="manualStdId" placeholder="กรอกรหัส 5 หลัก" maxlength="5" class="w-full p-3 rounded-xl border border-gray-200 bg-white outline-none font-bold text-center">
-                    <button onclick="recordManualScan()" class="bg-mstPurple text-white px-5 rounded-xl font-bold shadow-md whitespace-nowrap">ยืนยัน</button>
+                    <input type="tel" id="manualStdId" placeholder="กรอกรหัส นร. 5 หลัก" maxlength="5" class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 outline-none font-bold text-center tracking-widest text-lg">
+                    <button onclick="recordManualScan()" class="bg-gray-800 text-white px-5 rounded-xl font-bold shadow-md whitespace-nowrap"><i class="fas fa-paper-plane"></i></button>
                 </div>
             </div>
 
-            <div class="flex gap-3">
-                <button onclick="downloadCSV()" class="flex-1 bg-green-50 text-green-700 border border-green-200 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2"><i class="fas fa-file-csv"></i> โหลดไฟล์สรุป (CSV)</button>
+            <button onclick="downloadCSV()" class="w-full bg-green-50 text-green-700 border border-green-200 py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm"><i class="fas fa-file-csv text-lg"></i> ดาวน์โหลดข้อมูลสรุปยอด (CSV)</button>
+        </section>
+
+        <section id="verifyScreen" class="hidden fixed inset-0 flex items-center justify-center p-4 z-50 bg-gray-900/80 backdrop-blur-sm">
+            <div class="bg-white p-8 rounded-[2rem] w-full max-w-sm relative fade-in shadow-2xl">
+                <button onclick="$('#verifyScreen').addClass('hidden')" class="absolute top-4 right-4 text-gray-400 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"><i class="fas fa-times"></i></button>
+                <div class="text-center mb-6 mt-2"><div class="w-16 h-16 bg-purple-50 text-mstPurple rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-shield-alt text-2xl"></i></div><h2 class="text-xl font-black text-gray-900">ยืนยันตัวตนแอดมิน</h2></div>
+                <form id="verifyForm" class="space-y-4">
+                    <input type="tel" id="v_std_id" placeholder="รหัสนักเรียนสภาฯ" required class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-center tracking-widest font-bold outline-none" maxlength="5">
+                    <input type="tel" id="v_id_card" placeholder="เลข ปชช. 13 หลัก" required class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-center tracking-[0.2em] font-bold outline-none" maxlength="13">
+                    <button type="submit" class="w-full bg-gray-900 text-white py-4 rounded-xl font-bold shadow-lg mt-2">ยืนยันการเข้าถึง</button>
+                </form>
             </div>
         </section>
 
-        <div id="historyModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="glass p-6 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col fade-in shadow-2xl">
-                <div class="flex justify-between items-center mb-4 pb-3 border-b border-gray-200">
-                    <h3 class="text-lg font-black text-mstPurple"><i class="fas fa-history text-mstYellow mr-1"></i> ประวัติกิจกรรมของฉัน</h3>
-                    <button onclick="$('#historyModal').addClass('hidden')" class="text-gray-400 hover:text-red-500"><i class="fas fa-times text-xl"></i></button>
+        <div id="historyModal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-white p-6 rounded-t-[2rem] sm:rounded-[2rem] w-full max-w-md h-[80vh] sm:h-[70vh] flex flex-col fade-in shadow-2xl">
+                <div class="flex justify-between items-center mb-2 pb-4 border-b border-gray-100">
+                    <h3 class="text-xl font-black text-gray-900">ประวัติกิจกรรม</h3>
+                    <button onclick="$('#historyModal').addClass('hidden')" class="text-gray-400 w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full"><i class="fas fa-times"></i></button>
                 </div>
-                <div id="historyList" class="overflow-y-auto space-y-3 flex-1 no-scrollbar"></div>
+                <div id="historyList" class="overflow-y-auto flex-1 no-scrollbar pt-2 space-y-3"></div>
             </div>
         </div>
 
-        <div id="editProfileModal" class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-            <div class="glass p-6 rounded-3xl w-full max-w-sm fade-in shadow-2xl">
-                <h3 class="text-xl font-black text-mstPurple mb-4 text-center">อัปเดตรหัสนักเรียน</h3>
-                <input type="tel" id="updateStdId" placeholder="กรอกรหัส 5 หลัก" class="w-full p-4 rounded-xl border bg-white/90 text-center font-bold text-lg outline-none mb-4" maxlength="5">
-                <div class="flex gap-2">
-                    <button onclick="$('#editProfileModal').addClass('hidden')" class="w-1/3 bg-gray-200 py-3 rounded-xl font-bold">ปิด</button>
-                    <button onclick="saveNewStdId()" class="w-2/3 bg-mstPurple text-white py-3 rounded-xl font-bold">บันทึกข้อมูล</button>
+        <div id="editProfileModal" class="fixed inset-0 bg-gray-900/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white p-6 rounded-[2rem] w-full max-w-sm fade-in shadow-2xl text-center">
+                <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-id-badge text-2xl"></i></div>
+                <h3 class="text-xl font-black text-gray-900 mb-4">อัปเดตรหัสนักเรียน</h3>
+                <input type="tel" id="updateStdId" placeholder="รหัส 5 หลัก" class="w-full p-4 rounded-xl border border-gray-200 bg-gray-50 text-center font-black tracking-widest text-xl outline-none mb-6" maxlength="5">
+                <div class="flex gap-3">
+                    <button onclick="$('#editProfileModal').addClass('hidden')" class="w-1/3 bg-gray-100 text-gray-600 py-3.5 rounded-xl font-bold">ยกเลิก</button>
+                    <button onclick="saveNewStdId()" class="w-2/3 bg-mstPurple text-white py-3.5 rounded-xl font-bold">บันทึกข้อมูล</button>
                 </div>
             </div>
         </div>
@@ -175,6 +232,7 @@
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec"; 
         
         let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null; let html5QrcodeScanner = null;
+        let tempFoundStudent = null; // เก็บข้อมูลก่อนกดยืนยันหน้าจอเต็ม
 
         async function main() {
             await liff.init({ liffId: LIFF_ID });
@@ -185,7 +243,7 @@
 
         function setLoader(text) { $('#globalLoader').css('display', 'flex'); $('#loaderText').text(text); }
         function hideLoader() { $('#globalLoader').hide(); }
-        function nav(pageId) { $('#mainContainer > section').addClass('hidden'); $('#' + pageId).removeClass('hidden').addClass('fade-in'); }
+        function nav(pageId) { $('#mainContainer > section').addClass('hidden'); $('#' + pageId).removeClass('hidden').addClass('fade-in'); window.scrollTo({top:0, behavior:'smooth'});}
 
         async function checkUserStatus() {
             try {
@@ -197,13 +255,18 @@
             hideLoader();
         }
 
-        // --- แก้บัควันที่ Excel ---
+        // --- แก้บัควันที่ Excel สมบูรณ์แบบ ---
         function cleanExcelRoomString(val) {
             if(!val) return "ไม่ระบุ";
-            let str = val.toString();
+            let str = val.toString().trim();
+            
             if(str.match(/^\d{4}-\d{2}-\d{2}/) || str.includes("GMT") || str.includes("Z")) {
                 let d = new Date(str);
-                if(!isNaN(d)) return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); // แก้ 2026-06-05 เป็น 6/5
+                if(!isNaN(d)) return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); 
+            }
+            if(!isNaN(str) && Number(str) > 40000) { 
+                let d = new Date(Math.round((Number(str) - 25569) * 86400 * 1000));
+                return "ม." + (d.getMonth() + 1) + "/" + d.getDate();
             }
             let m = str.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/);
             if(m) return "ม." + m[1].replace(/\s/g, '');
@@ -214,7 +277,7 @@
             const searchId = document.getElementById("searchStdId").value.trim();
             if(!/^\d{5}$/.test(searchId)) return Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
             
-            setLoader('กำลังวิเคราะห์โครงสร้าง Excel ม.ส.ธ....');
+            setLoader('เชื่อมต่อฐานข้อมูลโรงเรียน...');
             try {
                 const targetWebUrl = encodeURIComponent("http://www.mst.ac.th/index.php");
                 const webProxyUrl = `https://mst-proxy.studentcouncil-f38.workers.dev/?url=${targetWebUrl}`;
@@ -260,19 +323,24 @@
                 hideLoader();
 
                 if(foundStudent) {
-                    const { value: phoneNum, isConfirmed } = await Swal.fire({
-                        title: 'พบข้อมูลนักเรียน',
-                        html: `<div class="bg-purple-50 p-4 rounded-xl text-left text-sm space-y-2 border border-purple-100 mb-4"><div class="flex justify-between"><span class="font-bold text-mstPurple">รหัสนักเรียน:</span> ${foundStudent.id}</div><div class="flex justify-between"><span class="font-bold text-mstPurple">ชื่อ-สกุล:</span> ${foundStudent.name}</div><div class="flex justify-between border-t border-purple-200 mt-2 pt-2"><span><span class="font-bold text-mstPurple">ชั้น:</span> ${foundStudent.className}</span><span><span class="font-bold text-mstPurple">เลขที่:</span> ${foundStudent.number}</span></div></div><p class="text-sm font-bold text-gray-700 mb-2">กรอกเบอร์โทรศัพท์เพื่อเสร็จสิ้นการผูกบัญชี</p>`,
-                        input: 'tel', inputPlaceholder: '08X-XXX-XXXX', icon: 'success', showCancelButton: true, confirmButtonText: 'ผูกบัตรดิจิทัล', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4A148C',
-                        inputValidator: (value) => { if (!value) return 'กรุณากรอกเบอร์โทรศัพท์' }
-                    });
-                    if(isConfirmed) {
-                        setLoader('กำลังสร้างบัตร...');
-                        const payload = { action: 'registerUser', uid: liffProfile.userId, name: foundStudent.name, className: foundStudent.className, phone: phoneNum, studentId: foundStudent.id, studentNum: foundStudent.number };
-                        await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); checkUserStatus(); 
-                    }
+                    tempFoundStudent = foundStudent;
+                    $('#fs_id').text(foundStudent.id);
+                    $('#fs_name').text(foundStudent.name);
+                    $('#fs_class').text(foundStudent.className);
+                    $('#fs_num').text(foundStudent.number);
+                    $('#foundStudentPage').removeClass('hidden'); // โชว์หน้าต่างเต็มจอ
                 } else { Swal.fire('ไม่พบข้อมูล', 'โปรดตรวจสอบรหัสอีกครั้ง', 'error'); }
-            } catch(err) { hideLoader(); Swal.fire('เกิดข้อผิดพลาด', 'เชื่อมต่อเว็บขัดข้อง: ' + err.message, 'error'); }
+            } catch(err) { hideLoader(); Swal.fire('เกิดข้อผิดพลาด', 'เชื่อมต่อขัดข้อง: ' + err.message, 'error'); }
+        }
+
+        async function confirmLinkStudent() {
+            const phoneNum = $('#fs_phone').val().trim();
+            if(!phoneNum) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเบอร์โทรศัพท์ก่อนกดยืนยัน', 'warning');
+            
+            $('#foundStudentPage').addClass('hidden');
+            setLoader('กำลังสร้างบัตรดิจิทัล...');
+            const payload = { action: 'registerUser', uid: liffProfile.userId, name: tempFoundStudent.name, className: tempFoundStudent.className, phone: phoneNum, studentId: tempFoundStudent.id, studentNum: tempFoundStudent.number };
+            try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); checkUserStatus(); } catch(e) { hideLoader(); Swal.fire('Error','บันทึกไม่สำเร็จ','error'); }
         }
 
         $('#registerManualForm').on('submit', async function(e) {
@@ -283,11 +351,13 @@
 
         function renderCard() {
             $('#cardName').text(userData.name); 
-            $('#cardClass').html(`ชั้น <span class="font-black">${userData.className}</span> | เลขที่ <span class="font-black">${userData.studentNum}</span>`);
-            if(!userData.studentId || userData.studentId === "") { $('#cardStdId').text('ยังไม่ระบุรหัสนักเรียน'); $('#updateNotice').removeClass('hidden'); } 
-            else { $('#cardStdId').text('รหัสนักเรียน: ' + userData.studentId); $('#updateNotice').addClass('hidden'); }
+            $('#cardClass').text(`ม.${userData.className.replace('ม.', '')}`); // โชว์แค่ ม.6/5
+            if(!userData.studentId || userData.studentId === "") { $('#cardStdId').text('ยังไม่ระบุรหัส'); $('#updateNotice').removeClass('hidden'); } 
+            else { $('#cardStdId').text(userData.studentId); $('#updateNotice').addClass('hidden'); }
+            
             if(qrCodeObj) qrCodeObj.clear(); $('#qrcode').empty();
-            qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 160, height: 160, colorDark : "#4A148C", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
+            qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 150, height: 150, colorDark : "#1f2937", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
+            $('#cardRef').text(userData.refCode);
         }
 
         async function saveNewStdId() {
@@ -298,7 +368,7 @@
             Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success');
         }
 
-        // --- ระบบดูประวัติกิจกรรม ---
+        // --- ระบบดูประวัติกิจกรรม (อัปเดต UI ให้ดูพรีเมียม) ---
         async function loadMyHistory() {
             setLoader('กำลังโหลดประวัติ...');
             try {
@@ -306,27 +376,35 @@
                 const result = await res.json();
                 const container = document.getElementById('historyList');
                 if(result.data.length === 0) {
-                    container.innerHTML = '<div class="text-center text-gray-400 py-10"><i class="fas fa-folder-open text-4xl mb-3 opacity-50"></i><p>ยังไม่มีประวัติกิจกรรม</p></div>';
+                    container.innerHTML = '<div class="text-center text-gray-400 mt-20"><div class="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-folder-open text-3xl"></i></div><p class="font-bold">ยังไม่มีประวัติกิจกรรม</p></div>';
                 } else {
-                    container.innerHTML = result.data.map(log => `
-                        <div class="bg-gray-50 border border-gray-100 p-4 rounded-xl flex items-center justify-between">
-                            <div><p class="font-bold text-gray-800 text-sm mb-1">${log.EventName}</p><p class="text-xs text-gray-500"><i class="far fa-clock"></i> ${new Date(log.Timestamp).toLocaleString('th-TH')}</p></div>
-                            <div class="w-8 h-8 bg-green-100 text-green-600 rounded-full flex items-center justify-center"><i class="fas fa-check"></i></div>
-                        </div>
-                    `).join('');
+                    container.innerHTML = result.data.map(log => {
+                        const isOut = log.Action === 'OUT';
+                        const colorClass = isOut ? 'text-red-500 bg-red-50' : 'text-green-500 bg-green-50';
+                        const icon = isOut ? 'fa-sign-out-alt' : 'fa-sign-in-alt';
+                        return `
+                        <div class="bg-gray-50 border border-gray-100 p-4 rounded-2xl flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}"><i class="fas ${icon}"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <p class="font-black text-gray-900 text-sm truncate leading-tight">${log.EventName}</p>
+                                <p class="text-[11px] text-gray-500 font-bold mt-0.5 truncate"><i class="fas fa-map-marker-alt text-purple-400"></i> ${log.Station}</p>
+                            </div>
+                            <div class="text-right shrink-0"><p class="text-[10px] text-gray-400 font-bold">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p><p class="text-xs font-black text-gray-600">${new Date(log.Timestamp).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p></div>
+                        </div>`
+                    }).join('');
                 }
                 $('#historyModal').removeClass('hidden');
             } catch(e) { Swal.fire('Error', 'โหลดประวัติไม่สำเร็จ', 'error'); }
             hideLoader();
         }
 
-        // --- ระบบ ADMIN (Scanner ต่อเนื่อง) ---
+        // --- ระบบ ADMIN (อัปเดต IN/OUT + ป้องกันสแกนซ้ำ) ---
         async function checkAdminAuth() {
             setLoader('ตรวจสอบสิทธิ์...');
             try {
                 const res = await fetch(`${GAS_URL}?action=checkAdminLogin&uid=${liffProfile.userId}`, { redirect: "follow" });
                 const data = await res.json();
-                if (data.status === 'found') { adminName = data.name; $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard'); } 
+                if (data.status === 'found') { adminName = data.name; $('#showAdminName').text(adminName); nav('adminDashboard'); } 
                 else { $('#verifyScreen').removeClass('hidden'); }
             } catch (e) {} hideLoader();
         }
@@ -336,7 +414,7 @@
             const payload = { action: 'verifyAdmin', uid: liffProfile.userId, std_id: $('#v_std_id').val(), id_card: $('#v_id_card').val() };
             try {
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); const data = await res.json();
-                if (data.status === 'success') { adminName = data.name; Swal.fire('สำเร็จ', 'ยืนยันตัวตนผ่าน', 'success').then(() => { $('#verifyScreen').addClass('hidden'); $('#showAdminName').text("Admin: " + adminName); nav('adminDashboard'); }); } 
+                if (data.status === 'success') { adminName = data.name; Swal.fire('สำเร็จ', 'ยืนยันตัวตนผ่าน', 'success').then(() => { $('#verifyScreen').addClass('hidden'); $('#showAdminName').text(adminName); nav('adminDashboard'); }); } 
                 else { Swal.fire('ไม่ผ่าน', 'ข้อมูลไม่ตรงกับฐานข้อมูลสภาฯ', 'error'); }
             } catch (e) {} hideLoader();
         });
@@ -348,70 +426,74 @@
         }
 
         function startContinuousScan() {
-            const evtName = $('#eventName').val();
-            if(!evtName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมก่อนเปิดกล้อง', 'warning');
+            const evtName = $('#eventName').val(); const stnName = $('#stationName').val();
+            if(!evtName || !stnName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมและจุดสแกนให้ครบถ้วน', 'warning');
             
-            $('#startScanBtn').addClass('hidden');
-            $('#scannerSection').removeClass('hidden');
-
+            $('#startScanBtn').addClass('hidden'); $('#scannerSection').removeClass('hidden');
             html5QrcodeScanner = new Html5Qrcode("reader");
             html5QrcodeScanner.start(
-                { facingMode: "environment" }, // ใช้กล้องหลัง
-                { fps: 10, qrbox: { width: 250, height: 250 } },
+                { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
                 (decodedText) => {
                     if (html5QrcodeScanner.getState() !== 2) return; 
                     if(decodedText.startsWith("MSTSC_")) {
-                        html5QrcodeScanner.pause(); // หยุดสแกนชั่วคราวตอนยิง API
-                        processAdminCheckIn(decodedText, evtName, null);
+                        html5QrcodeScanner.pause(); 
+                        processAdminCheckIn(decodedText, null);
                     }
-                },
-                (errorMessage) => { /* ไม่ต้อง log error เพื่อไม่ให้รก */ }
+                }, (errorMessage) => { }
             ).catch(err => {
                 $('#scannerSection').addClass('hidden'); $('#startScanBtn').removeClass('hidden');
-                Swal.fire('ข้อผิดพลาดกล้อง', 'ไม่สามารถเปิดกล้องได้ โปรดตรวจสอบการอนุญาต', 'error');
+                Swal.fire('ข้อผิดพลาดกล้อง', 'ไม่สามารถเปิดกล้องได้ โปรดอนุญาตการใช้กล้อง', 'error');
             });
         }
 
         function recordManualScan() {
             const manualId = $('#manualStdId').val().trim();
-            const evtName = $('#eventName').val();
-            if(!evtName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมก่อน', 'warning');
             if(manualId.length !== 5) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัส 5 หลัก', 'warning');
-            
-            processAdminCheckIn(null, evtName, manualId);
+            processAdminCheckIn(null, manualId);
         }
 
-        async function processAdminCheckIn(refCode, evtName, stdId) {
+        async function processAdminCheckIn(refCode, stdId) {
+            const evtName = $('#eventName').val(); const stnName = $('#stationName').val();
+            const actionType = $('input[name="scanType"]:checked').val();
+            if(!evtName || !stnName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมและจุดสแกน', 'warning');
+
             setLoader('บันทึก...');
             try {
-                const payload = { action: 'recordCheckIn', refCode: refCode, stdId: stdId, eventName: evtName, adminName: adminName };
+                const payload = { action: 'recordCheckIn', refCode: refCode, stdId: stdId, eventName: evtName, stationName: stnName, actionType: actionType, adminName: adminName };
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
                 const data = await res.json();
                 hideLoader();
 
+                const actionText = actionType === 'IN' ? 'เข้า' : 'ออก';
+                
                 if(data.status === 'success') { 
-                    Swal.fire({ title: 'เช็กชื่อผ่าน!', html: `<b class="text-xl text-mstPurple">${data.student.name}</b><br>เลขที่ ${data.student.studentNum} | ${data.student.className}`, icon: 'success', timer: 1500, showConfirmButton: false }).then(() => {
-                        $('#manualStdId').val('');
-                        if(html5QrcodeScanner && html5QrcodeScanner.getState() === 3) html5QrcodeScanner.resume(); // สแกนต่อทันที
-                    }); 
-                } else { 
-                    Swal.fire('ไม่พบผู้ใช้', 'ไม่พบข้อมูลในระบบ', 'error').then(() => {
-                        if(html5QrcodeScanner && html5QrcodeScanner.getState() === 3) html5QrcodeScanner.resume();
-                    }); 
+                    Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 px-3 py-1 rounded-lg text-sm font-bold">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false }).then(() => { resumeScan(); }); 
+                } 
+                else if (data.status === 'duplicate_in') {
+                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อเข้าจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(); });
+                }
+                else if (data.status === 'duplicate_out') {
+                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อออกจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(); });
+                }
+                else { 
+                    Swal.fire('ไม่พบผู้ใช้', 'ไม่พบข้อมูลบัตรนี้ในระบบ', 'error').then(() => { resumeScan(); }); 
                 }
             } catch (e) { 
-                hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error').then(() => {
-                    if(html5QrcodeScanner && html5QrcodeScanner.getState() === 3) html5QrcodeScanner.resume();
-                }); 
+                hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error').then(() => { resumeScan(); }); 
             }
         }
 
+        function resumeScan() {
+            $('#manualStdId').val('');
+            if(html5QrcodeScanner && html5QrcodeScanner.getState() === 3) html5QrcodeScanner.resume();
+        }
+
         async function downloadCSV() {
-            setLoader('สร้างไฟล์...');
+            setLoader('สร้างไฟล์ CSV...');
             const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); hideLoader();
-            if(!result.data || result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการสแกน', 'info');
-            let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
-            result.data.forEach(row => { csvContent += `${new Date(row.Timestamp).toLocaleString('th-TH')},${row.EventName},${row.RefCode},${row.StudentName},${row.Class},${row.StudentNum},${row.StudentID},${row.ScannerName}\n`; });
+            if(!result.data || result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติ', 'info');
+            let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,Station,Action,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
+            result.data.forEach(row => { csvContent += `${new Date(row.Timestamp).toLocaleString('th-TH')},${row.EventName},${row.Station},${row.Action},${row.RefCode},${row.StudentName},${row.Class},${row.StudentNum},${row.StudentID},${row.ScannerName}\n`; });
             const encodedUri = encodeURI(csvContent); const link = document.createElement("a"); link.setAttribute("href", encodedUri); link.setAttribute("download", "MSTSC_Event_Logs.csv");
             document.body.appendChild(link); link.click(); document.body.removeChild(link);
         }
