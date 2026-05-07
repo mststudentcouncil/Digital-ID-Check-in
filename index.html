@@ -15,8 +15,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <style>
         body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); background-attachment: fixed; touch-action: manipulation; overscroll-behavior-y: none; overflow: hidden; margin: 0; padding: 0; }
@@ -28,7 +29,6 @@
         .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 3D Flip Card */
         .perspective-1000 { perspective: 1000px; }
         .preserve-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
         .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(1px); }
@@ -41,9 +41,9 @@
         
         @supports (padding-bottom: env(safe-area-inset-bottom)) { .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); } }
 
-        /* ปรับแต่งกล้อง Full Screen ให้เนียนเป๊ะ */
-        #reader { width: 100%; height: 100%; border: none !important; }
-        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
+        /* ปรับสไตล์กล้องใหม่ */
+        #videoElement { width: 100%; height: 100%; object-fit: cover; }
+        #canvasElement { display: none; }
     </style>
 </head>
 <body class="text-gray-800 antialiased flex justify-center">
@@ -57,7 +57,6 @@
         </header>
 
         <div class="flex-1 flex flex-col overflow-hidden relative" id="contentArea">
-
             <section id="loginPage" class="hidden fade-in flex-1 flex flex-col items-center justify-center p-4">
                 <div class="glass-heavy rounded-[2.5rem] p-8 text-center w-full shadow-xl relative overflow-hidden">
                     <div class="absolute -top-10 -right-10 w-32 h-32 bg-mstYellow opacity-20 rounded-full blur-2xl"></div>
@@ -76,7 +75,7 @@
                             <div class="absolute bottom-1 right-1 bg-[#06C755] w-7 h-7 rounded-full border-2 border-white flex items-center justify-center"><i class="fab fa-line text-white text-[11px]"></i></div>
                         </div>
                         <h2 class="text-2xl font-black text-gray-800 mb-1">สวัสดี, <span id="welcomeLineName" class="text-mstPurple"></span></h2>
-                        <p class="text-[11px] font-bold text-gray-500 mb-6 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">ผูกรหัสนักเรียนของคุณเพื่อใช้งานระบบ DIGITAL ID</p>
+                        <p class="text-[11px] font-bold text-gray-500 mb-6 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100">ผูกรหัสนักเรียนของคุณเพื่อเริ่มต้น</p>
                         <div class="space-y-4">
                             <input type="tel" id="searchStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 focus:bg-white focus:border-mstPurple outline-none text-center tracking-[0.1em] font-black text-xl text-gray-800 shadow-inner transition-all">
                             <button onclick="searchStudentFromWeb()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-4 rounded-2xl font-bold shadow-lg hover:-translate-y-1 transition-transform text-lg"><i class="fas fa-search mr-2"></i> ค้นหาฐานข้อมูล</button>
@@ -145,14 +144,87 @@
                 </div>
                 
                 <div class="grid grid-cols-2 gap-3 pb-6">
-                    <button onclick="openSelfCheckIn()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2 hover:-translate-y-1"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-map-marker-alt text-xl text-red-500"></i></div><span class="text-[10px] uppercase font-black">เช็กอินด้วยตนเอง</span></button>
-                    <button onclick="loadMyHistory()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2 hover:-translate-y-1"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-history text-xl text-mstYellow"></i></div><span class="text-[10px] uppercase font-black">ประวัติกิจกรรม</span></button>
-                </div>
-
-                <div class="flex justify-center items-center gap-4 pb-8">
-                    <button onclick="checkAdminAuth()" class="text-[11px] text-gray-500 font-bold bg-white/80 px-5 py-2.5 rounded-full border border-gray-200 shadow-sm hover:text-mstPurple transition-colors flex items-center gap-1.5"><i class="fas fa-shield-alt"></i> สำหรับสภานักเรียน</button>
+                    <button onclick="openSelfCheckIn()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-map-marker-alt text-xl text-red-500"></i></div><span class="text-[10px] uppercase font-black">เช็กอินด้วยตนเอง</span></button>
+                    <button onclick="loadMyHistory()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-history text-xl text-mstYellow"></i></div><span class="text-[10px] uppercase font-black">ประวัติกิจกรรม</span></button>
                 </div>
             </section>
+
+            <section id="adminDashboard" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-40 bg-[#f3e5f5]">
+                <div class="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col pb-safe relative">
+                    <div class="glass-heavy rounded-[2.5rem] p-6 mb-5 shadow-xl border border-white relative overflow-hidden mt-4 shrink-0">
+                        <div class="flex justify-between items-start">
+                            <div><h2 class="font-black text-2xl mb-1 text-mstPurple">Scanner Mode</h2><p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest"><i class="fas fa-user-check text-mstYellow"></i> <span id="showAdminName"></span></p></div>
+                            <button onclick="exitAdmin()" class="bg-white text-gray-500 w-10 h-10 rounded-full shadow-sm border border-gray-100 hover:text-red-500"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 shrink-0">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-2">เลือกกิจกรรมที่เปิดอยู่</label>
+                        <select id="eventSelect" class="w-full p-4 rounded-2xl bg-gray-50 text-mstPurple font-bold mb-5 outline-none text-center border-none shadow-inner appearance-none">
+                            <option value="">-- กำลังโหลดกิจกรรม --</option>
+                        </select>
+
+                        <div class="flex gap-2">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
+                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
+                            </label>
+                            <label class="flex-1 cursor-pointer" id="outRadioContainer">
+                                <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
+                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 text-center shrink-0 mt-auto">
+                        <button id="startScanBtn" onclick="openScannerOverlay()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-6 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-transform text-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-qrcode text-2xl text-mstYellow"></i> เปิดหน้าต่างสแกน
+                        </button>
+                    </div>
+
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-6 shrink-0 mt-auto">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง (Manual)</label>
+                        <div class="flex gap-2">
+                            <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 outline-none font-black text-center tracking-[0.2em] text-xl shadow-inner border-none transition-all">
+                            <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg"><i class="fas fa-paper-plane text-xl"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="scannerOverlay" class="hidden fixed inset-0 z-[200] bg-black flex-col fade-in">
+                <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20 pt-safe">
+                    <div class="text-white">
+                        <h3 class="font-black text-lg text-mstYellow tracking-wider"><i class="fas fa-qrcode"></i> SCANNER</h3>
+                        <p class="text-[10px] opacity-80">หันกล้องไปที่ QR Code ของเพื่อน</p>
+                    </div>
+                    <button onclick="stopScan()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md hover:bg-red-500"><i class="fas fa-times"></i></button>
+                </div>
+                
+                <div class="flex-1 relative overflow-hidden bg-black flex items-center justify-center">
+                    <video id="videoElement" playsinline></video>
+                    <canvas id="canvasElement"></canvas>
+                    
+                    <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+                        <div class="w-64 h-64 border-[3px] border-mstYellow rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] relative">
+                            <div class="absolute -top-1 -left-1 w-6 h-6 border-t-[5px] border-l-[5px] border-mstYellow rounded-tl-[2rem]"></div>
+                            <div class="absolute -top-1 -right-1 w-6 h-6 border-t-[5px] border-r-[5px] border-mstYellow rounded-tr-[2rem]"></div>
+                            <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-[5px] border-l-[5px] border-mstYellow rounded-bl-[2rem]"></div>
+                            <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-[5px] border-r-[5px] border-mstYellow rounded-br-[2rem]"></div>
+                            
+                            <div class="absolute top-0 left-0 w-full h-[2px] bg-mstYellow shadow-[0_0_10px_#FFC107] animate-[scanLine_2s_linear_infinite]"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <style>
+                @keyframes scanLine {
+                    0% { top: 0%; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+            </style>
 
             <section id="selfCheckInPage" class="hidden fade-in flex-1 flex flex-col bg-[#f3e5f5] absolute inset-0 z-50">
                 <div class="bg-white px-5 py-4 flex justify-between items-center shadow-sm shrink-0">
@@ -188,7 +260,6 @@
                 <div class="flex-1 overflow-y-auto no-scrollbar p-6 pt-12 pb-6 text-center flex flex-col justify-center items-center">
                     <div class="w-20 h-20 bg-white text-[#06C755] rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl border border-green-100"><i class="fas fa-check text-4xl"></i></div>
                     <h2 class="text-2xl font-black text-mstPurple mb-2 tracking-tight">พบข้อมูลของคุณ</h2>
-                    
                     <div class="glass-heavy rounded-[2rem] p-6 text-left space-y-4 mb-6 shadow-xl border border-white w-full max-w-sm mt-4">
                         <div class="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl shadow-inner border border-gray-100"><div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-mstPurple"><i class="fas fa-id-card text-xl"></i></div><div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">รหัสนักเรียน</p><p class="text-xl font-black text-gray-800 font-mono tracking-wider" id="fs_id">-</p></div></div>
                         <div><p class="text-[9px] text-gray-400 font-bold uppercase pl-2 mb-1">ชื่อ-นามสกุล</p><p class="text-sm font-bold text-gray-800 bg-white/80 p-4 rounded-2xl shadow-sm border border-gray-100 text-center" id="fs_name">-</p></div>
@@ -223,82 +294,22 @@
                     <button onclick="$('#verifyForm').submit()" class="w-2/3 bg-gray-900 text-mstYellow py-4 rounded-2xl font-black shadow-lg text-lg">เข้าสู่ระบบ</button>
                 </div>
             </section>
-
-            <section id="adminDashboard" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-40 bg-[#f3e5f5]">
-                <div class="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col pb-safe relative">
-                    <div class="glass-heavy rounded-[2.5rem] p-6 mb-5 shadow-xl border border-white relative overflow-hidden mt-4 shrink-0">
-                        <div class="flex justify-between items-start">
-                            <div><h2 class="font-black text-2xl mb-1 text-mstPurple">Scanner Mode</h2><p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest"><i class="fas fa-user-check text-mstYellow"></i> <span id="showAdminName"></span></p></div>
-                            <button onclick="exitAdmin()" class="bg-white text-gray-500 w-10 h-10 rounded-full shadow-sm border border-gray-100 hover:text-red-500"><i class="fas fa-times"></i></button>
-                        </div>
-                    </div>
-
-                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 shrink-0">
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-2">เลือกกิจกรรมที่เปิดอยู่</label>
-                        <select id="eventSelect" class="w-full p-4 rounded-2xl bg-gray-50 text-mstPurple font-bold mb-5 outline-none text-center border-none shadow-inner appearance-none">
-                            <option value="">-- กำลังโหลดกิจกรรม --</option>
-                        </select>
-
-                        <div class="flex gap-2">
-                            <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
-                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
-                            </label>
-                            <label class="flex-1 cursor-pointer" id="outRadioContainer">
-                                <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
-                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
-                            </label>
-                        </div>
-                    </div>
-
-                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 text-center shrink-0">
-                        <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-6 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-transform text-xl flex items-center justify-center gap-2">
-                            <i class="fas fa-qrcode text-2xl text-mstYellow"></i> เปิดหน้าต่างสแกน
-                        </button>
-                        <p class="text-[10px] text-gray-500 mt-4 font-bold"><i class="fas fa-info-circle text-mstPurple"></i> ระบบจะขออนุญาตใช้งานกล้องเพียงครั้งเดียว</p>
-                    </div>
-
-                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-6 shrink-0 mt-auto">
-                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง</label>
-                        <div class="flex gap-2">
-                            <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 outline-none font-black text-center tracking-[0.2em] text-xl shadow-inner border-none transition-all">
-                            <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg"><i class="fas fa-paper-plane text-xl"></i></button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            
         </div>
     </main>
-
-    <section id="scannerOverlay" class="hidden fixed inset-0 z-[200] bg-black flex-col fade-in">
-        <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20">
-            <div class="text-white">
-                <h3 class="font-black text-lg text-mstYellow tracking-wider"><i class="fas fa-qrcode"></i> SCANNER</h3>
-                <p class="text-[10px] opacity-80" id="scanStatusText">หันกล้องไปที่ QR Code ของเพื่อน</p>
-            </div>
-            <button onclick="stopScan()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md hover:bg-red-500 transition-colors"><i class="fas fa-times"></i></button>
-        </div>
-        
-        <div class="flex-1 relative flex items-center justify-center overflow-hidden">
-            <div id="reader" class="w-full h-full object-cover"></div>
-            <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
-                <div class="w-64 h-64 border-[3px] border-mstYellow rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] relative">
-                    <div class="absolute -top-1 -left-1 w-6 h-6 border-t-[5px] border-l-[5px] border-mstYellow rounded-tl-[2rem]"></div>
-                    <div class="absolute -top-1 -right-1 w-6 h-6 border-t-[5px] border-r-[5px] border-mstYellow rounded-tr-[2rem]"></div>
-                    <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-[5px] border-l-[5px] border-mstYellow rounded-bl-[2rem]"></div>
-                    <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-[5px] border-r-[5px] border-mstYellow rounded-br-[2rem]"></div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <script>
         const LIFF_ID = "2008923798-Py9KNvvH"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec"; 
         
-        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null; let html5QrCode = null;
+        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null;
         let tempFoundStudent = null; let activeEvents = []; let myHistoryCache = [];
+        
+        // ตัวแปรสำหรับกล้องใหม่ (jsQR)
+        let video = document.getElementById("videoElement");
+        let canvasElement = document.getElementById("canvasElement");
+        let canvas = canvasElement.getContext("2d");
+        let isScanning = false;
+        let scanStream = null;
 
         async function main() {
             try {
@@ -379,7 +390,7 @@
         async function confirmLinkStudent() {
             const phoneNum = $('#fs_phone').val().trim();
             if(!phoneNum) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเบอร์โทรศัพท์', 'warning');
-            setLoader('กำลังสร้างบัตรดิจิทัล...');
+            $('#foundStudentPage').addClass('hidden'); setLoader('กำลังสร้างบัตรดิจิทัล...');
             try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'registerUser', uid: liffProfile.userId, name: tempFoundStudent.name, className: tempFoundStudent.className, phone: phoneNum, studentId: tempFoundStudent.id, studentNum: tempFoundStudent.number }) }); checkUserStatus(); } 
             catch(e) { hideLoader(); Swal.fire('Error','บันทึกไม่สำเร็จ','error'); }
         }
@@ -418,7 +429,6 @@
             userData.studentId = newId; renderCard(); nav('studentDashboard'); hideLoader(); Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success');
         }
 
-        // --- ระบบดูประวัติ (Full Page) ---
         async function loadMyHistory() {
             setLoader('กำลังโหลดประวัติ...');
             try {
@@ -444,7 +454,6 @@
             return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         }
 
-        // --- ระบบ Self Check-in ---
         async function openSelfCheckIn() {
             setLoader('โหลดกิจกรรม...');
             try {
@@ -533,7 +542,6 @@
             }, (error) => { hideLoader(); Swal.fire('Error', 'กรุณาอนุญาตการเข้าถึงตำแหน่ง (GPS)', 'error'); }, { enableHighAccuracy: true });
         }
 
-        // --- ระบบ STAFF สแกน ---
         async function checkAdminAuth() {
             setLoader('ตรวจสอบสิทธิ์...');
             try {
@@ -554,14 +562,9 @@
         }
         
         $('#eventSelect').on('change', function() {
-            const evId = $(this).val();
-            const ev = activeEvents.find(e => e.id === evId);
-            if(ev && (ev.allowOut === true || String(ev.allowOut).toLowerCase() === 'true')) {
-                $('#outRadioContainer').removeClass('hidden');
-            } else {
-                $('#outRadioContainer').addClass('hidden');
-                $('input[name="scanType"][value="IN"]').prop('checked', true);
-            }
+            const evId = $(this).val(); const ev = activeEvents.find(e => e.id === evId);
+            if(ev && (ev.allowOut === true || String(ev.allowOut).toLowerCase() === 'true')) { $('#outRadioContainer').removeClass('hidden'); } 
+            else { $('#outRadioContainer').addClass('hidden'); $('input[name="scanType"][value="IN"]').prop('checked', true); }
         });
 
         $('#verifyForm').on('submit', async function(e) {
@@ -577,43 +580,57 @@
 
         function playErrorSound() { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'square'; oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3); }
 
-        // --- ระบบกล้อง Html5Qrcode เต็มจอ ---
-        function startContinuousScan() {
-            const evtId = $('#eventSelect').val(); if(!evtId) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกกิจกรรมก่อนสแกน', 'warning');
-            
+        // ==========================================
+        // ระบบกล้องความเร็วสูง (jsQR) สำหรับสแกน QR Code
+        // ==========================================
+        function openScannerOverlay() {
+            const evtId = $('#eventSelect').val(); 
+            if(!evtId) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกกิจกรรมก่อนเปิดกล้อง', 'warning');
             $('#scannerOverlay').removeClass('hidden').addClass('flex');
-            
-            html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 250 } }, 
-                (decodedText) => {
-                    if (html5QrCode.getState() !== 2) return; 
-                    if(decodedText.startsWith("MSTSC_")) { 
-                        html5QrCode.pause(); 
-                        processStaffCheckIn(decodedText, null); 
-                    } else { 
-                        Swal.fire({title: 'ผิดพลาด', text: 'QR Code ไม่ใช่ของระบบ', icon: 'error', target: document.getElementById('scannerOverlay')}).then(() => { html5QrCode.resume(); }); 
-                    }
-                }, 
-                (err) => {}
-            ).catch(err => { 
-                $('#scannerOverlay').removeClass('flex').addClass('hidden'); 
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตใช้งานกล้อง', 'error'); 
+            startContinuousScan();
+        }
+
+        function startContinuousScan() {
+            isScanning = true;
+            // ดึงกล้องหลัง ความละเอียดสูงสุดเท่าที่มือถือรับได้ (HD/4K)
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } }).then(function(stream) {
+                scanStream = stream;
+                video.srcObject = stream;
+                video.setAttribute("playsinline", true);
+                video.play();
+                requestAnimationFrame(tick);
+            }).catch(function(err) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบการตั้งค่าอนุญาต', 'error');
+                stopScan();
             });
         }
 
-        function stopScan() {
-            if(html5QrCode) {
-                html5QrCode.stop().then(() => {
-                    html5QrCode.clear();
-                    $('#scannerOverlay').removeClass('flex').addClass('hidden');
-                }).catch(err => {
-                    $('#scannerOverlay').removeClass('flex').addClass('hidden');
-                });
+        function tick() {
+            if (!isScanning) return;
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvasElement.height = video.videoHeight;
+                canvasElement.width = video.videoWidth;
+                canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
+                var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
+                
+                // ถอดรหัสด้วย jsQR
+                var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+                
+                if (code && code.data.startsWith("MSTSC_")) {
+                    isScanning = false; // หยุดสแกนชั่วคราวตอนยิง API
+                    processStaffCheckIn(code.data, null);
+                } else {
+                    requestAnimationFrame(tick); // ลูปสแกนต่อไปจนกว่าจะเจอ
+                }
             } else {
-                $('#scannerOverlay').removeClass('flex').addClass('hidden');
+                requestAnimationFrame(tick);
             }
+        }
+
+        function stopScan() {
+            isScanning = false;
+            if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); }
+            $('#scannerOverlay').removeClass('flex').addClass('hidden');
         }
 
         function recordManualScan() {
@@ -625,8 +642,6 @@
 
         async function processStaffCheckIn(refCode, stdId) {
             const evtId = $('#eventSelect').val(); const actionType = $('input[name="scanType"]:checked').val();
-            
-            // ใช้ SweetAlert ที่ target ไปที่ scannerOverlay ถ้าเปิดกล้องอยู่
             const swalTarget = $('#scannerOverlay').hasClass('flex') ? document.getElementById('scannerOverlay') : document.body;
             Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, target: swalTarget, didOpen: () => Swal.showLoading() });
 
@@ -654,8 +669,9 @@
 
         function resumeScan(wasScanned) { 
             $('#manualStdId').val(''); 
-            if(wasScanned && html5QrCode && html5QrCode.getState() === 3) {
-                html5QrCode.resume(); 
+            if(wasScanned && $('#scannerOverlay').hasClass('flex')) {
+                // หน่วงเวลาเล็กน้อยเพื่อให้ข้อความ Alert หายไปก่อน แล้วค่อยเปิดกล้องทำงานต่อ
+                setTimeout(() => { isScanning = true; requestAnimationFrame(tick); }, 300);
             } 
         }
     </script>
