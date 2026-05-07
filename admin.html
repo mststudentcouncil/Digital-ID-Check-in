@@ -20,7 +20,7 @@
 <body class="text-gray-800 antialiased p-6">
 
     <div id="loginScreen" class="max-w-md mx-auto mt-20 glass-heavy p-8 rounded-[2.5rem] shadow-2xl text-center fade-in">
-        <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="w-24 h-24 mx-auto mb-4 drop-shadow-xl" alt="Logo">
+        <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="w-24 h-24 mx-auto mb-4 drop-shadow-xl">
         <h2 class="text-3xl font-black text-mstPurple mb-1 tracking-tight">Master Admin</h2>
         <p class="text-xs font-bold text-gray-500 mb-8 uppercase tracking-widest text-center">Student Council</p>
         <form id="adminLoginForm" class="space-y-4">
@@ -45,8 +45,27 @@
                             <div><label class="text-[10px] font-bold text-gray-500 uppercase ml-2 mb-1 block">ชื่อกิจกรรม</label><input type="text" id="c_evtName" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50 outline-none focus:bg-white focus:ring-2 focus:ring-mstPurple/20 shadow-inner font-bold"></div>
                             <div><label class="text-[10px] font-bold text-gray-500 uppercase ml-2 mb-1 block">ชื่อฐาน / จุดสแกน</label><input type="text" id="c_stnName" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50 outline-none focus:bg-white focus:ring-2 focus:ring-mstPurple/20 shadow-inner font-bold"></div>
                         </div>
+
+                        <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mt-4">
+                            <h3 class="text-sm font-black text-mstPurple mb-3"><i class="far fa-clock"></i> ตั้งค่าเวลาเช็กอิน (IN)</h3>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนเข้า</label><input type="datetime-local" id="c_inStart" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs"></div>
+                                <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนเข้า</label><input type="datetime-local" id="c_inEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs"></div>
+                            </div>
+                            
+                            <label class="flex items-center gap-2 cursor-pointer mt-4 pt-4 border-t border-gray-100">
+                                <input type="checkbox" id="c_allowOut" class="w-5 h-5 text-mstPurple rounded focus:ring-mstPurple" onchange="toggleOutTimes()">
+                                <span class="text-sm font-bold text-gray-700">เปิดให้มีการ เช็กเอาต์ (OUT) ออกจากกิจกรรมด้วย</span>
+                            </label>
+                            
+                            <div id="outTimesDiv" class="grid grid-cols-2 gap-4 mt-4 hidden">
+                                <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนออก</label><input type="datetime-local" id="c_outStart" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs"></div>
+                                <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนออก</label><input type="datetime-local" id="c_outEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs"></div>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-2 mb-2 block">ประเภทการเช็กอิน</label>
+                            <label class="text-[10px] font-bold text-gray-500 uppercase ml-2 mb-2 block mt-4">ประเภทเครื่องสแกน</label>
                             <div class="flex gap-4">
                                 <label class="flex-1 cursor-pointer"><input type="radio" name="c_type" value="Scan" checked onchange="toggleGPS(false)" class="hidden peer"><div class="border-2 border-transparent bg-gray-50 text-gray-500 rounded-2xl p-4 text-center font-black transition-all shadow-inner peer-checked:bg-gradient-to-r peer-checked:from-mstPurple peer-checked:to-purple-600 peer-checked:text-white">สตาฟสแกนให้</div></label>
                                 <label class="flex-1 cursor-pointer"><input type="radio" name="c_type" value="Self" onchange="toggleGPS(true)" class="hidden peer"><div class="border-2 border-transparent bg-gray-50 text-gray-500 rounded-2xl p-4 text-center font-black transition-all shadow-inner peer-checked:bg-gradient-to-r peer-checked:from-mstPurple peer-checked:to-purple-600 peer-checked:text-white">นักเรียนกดเอง (GPS)</div></label>
@@ -54,8 +73,8 @@
                         </div>
                         <div id="gpsSettings" class="hidden bg-purple-50 p-6 rounded-[2rem] border border-purple-100 shadow-inner mt-4">
                             <div class="flex justify-between items-center mb-4">
-                                <div class="text-[11px] text-mstPurple font-bold"><i class="fas fa-map-marker-alt"></i> ตั้งค่าพิกัดเพื่อให้ นร. กดเช็กอินได้ในรัศมีที่กำหนด</div>
-                                <button type="button" onclick="getCurrentGPS()" class="bg-white text-mstPurple px-4 py-2 rounded-xl text-xs font-black shadow-sm border border-purple-100 hover:bg-purple-100 transition-colors flex items-center gap-2"><i class="fas fa-satellite-dish"></i> ดึงตำแหน่งปัจจุบัน</button>
+                                <div class="text-[11px] text-mstPurple font-bold"><i class="fas fa-map-marker-alt"></i> ตั้งพิกัดสำหรับเช็กอินด้วยตนเอง</div>
+                                <button type="button" onclick="getCurrentGPS()" class="bg-white text-mstPurple px-4 py-2 rounded-xl text-xs font-black shadow-sm border border-purple-100 hover:bg-purple-100 transition-colors"><i class="fas fa-satellite-dish"></i> ดึงตำแหน่งปัจจุบัน</button>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <div><input type="text" id="c_lat" placeholder="ละติจูด (Lat)" class="w-full p-4 rounded-xl bg-white border border-gray-100 outline-none text-sm font-bold shadow-sm"></div>
@@ -77,7 +96,6 @@
                 <div class="glass-heavy p-6 rounded-[2.5rem] shadow-xl border border-white text-center">
                     <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-users text-2xl"></i></div>
                     <h2 class="text-lg font-black mb-1">ฐานข้อมูลนักเรียน</h2>
-                    <p class="text-[10px] text-gray-500 mb-5 font-bold uppercase tracking-widest">ผู้ลงทะเบียน Digital ID</p>
                     <div id="userStats" class="text-center font-black text-5xl text-mstPurple bg-white py-6 rounded-3xl border border-gray-100 shadow-inner mb-4 flex flex-col items-center justify-center"><span class="animate-pulse">0</span><span class="text-sm text-gray-400 font-bold mt-1">คนในระบบ</span></div>
                     <button onclick="loadUsers()" class="w-full bg-blue-50 text-blue-600 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-colors"><i class="fas fa-sync-alt"></i> ดูรายชื่อทั้งหมด</button>
                 </div>
@@ -104,21 +122,16 @@
         $(document).ready(function() { if(sessionStorage.getItem("adminName")) loadDashboard(); });
 
         function toggleGPS(show) { if(show) { $('#gpsSettings').hide().removeClass('hidden').slideDown(300); } else { $('#gpsSettings').slideUp(300); } }
+        function toggleOutTimes() { if($('#c_allowOut').is(':checked')) { $('#outTimesDiv').hide().removeClass('hidden').slideDown(300); } else { $('#outTimesDiv').slideUp(300); } }
 
-        // ฟังก์ชันดึง GPS อัตโนมัติสำหรับ Admin
         function getCurrentGPS() {
             if (navigator.geolocation) {
                 Swal.fire({ title: 'กำลังค้นหาตำแหน่ง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 navigator.geolocation.getCurrentPosition((position) => {
-                    $('#c_lat').val(position.coords.latitude);
-                    $('#c_lng').val(position.coords.longitude);
+                    $('#c_lat').val(position.coords.latitude); $('#c_lng').val(position.coords.longitude);
                     Swal.fire({ title: 'สำเร็จ', text: 'ดึงพิกัด GPS เรียบร้อย', icon: 'success', timer: 1500, showConfirmButton: false });
-                }, (error) => {
-                    Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์ของคุณ', 'error');
-                }, { enableHighAccuracy: true });
-            } else {
-                Swal.fire('ผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบ GPS', 'error');
-            }
+                }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์', 'error'); }, { enableHighAccuracy: true });
+            } else { Swal.fire('ผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบ GPS', 'error'); }
         }
 
         $('#adminLoginForm').on('submit', async function(e) {
@@ -127,7 +140,7 @@
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'verifyAdmin', uid: "ADMIN_DASHBOARD", std_id: $('#adminStdId').val(), id_card: $('#adminIdCard').val() }) });
                 const data = await res.json();
                 if(data.status === 'success') { sessionStorage.setItem("adminName", data.name); Swal.close(); loadDashboard(); } 
-                else { Swal.fire('ผิดพลาด', 'ข้อมูลไม่ถูกต้อง', 'error'); }
+                else { Swal.fire('ผิดพลาด', 'ข้อมูลไม่ถูกต้อง หรือคุณไม่มีสิทธิ์', 'error'); }
             } catch(err) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'); }
         });
 
@@ -142,11 +155,20 @@
 
         $('#createEventForm').on('submit', async function(e) {
             e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            const payload = { action: 'createEvent', name: $('#c_evtName').val(), station: $('#c_stnName').val(), type: $('input[name="c_type"]:checked').val(), lat: $('#c_lat').val(), lng: $('#c_lng').val(), radius: $('#c_radius').val() };
+            
+            const payload = { 
+                action: 'createEvent', 
+                name: $('#c_evtName').val(), station: $('#c_stnName').val(), type: $('input[name="c_type"]:checked').val(), 
+                lat: $('#c_lat').val(), lng: $('#c_lng').val(), radius: $('#c_radius').val(),
+                inStart: $('#c_inStart').val(), inEnd: $('#c_inEnd').val(),
+                allowOut: $('#c_allowOut').is(':checked'),
+                outStart: $('#c_outStart').val(), outEnd: $('#c_outEnd').val()
+            };
+            
             try {
                 await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) });
                 Swal.fire({ title: 'สำเร็จ', text: 'สร้างกิจกรรมเรียบร้อยแล้ว', icon: 'success', confirmButtonColor: '#4A148C' }); 
-                $('#createEventForm')[0].reset(); toggleGPS(false); fetchEvents();
+                $('#createEventForm')[0].reset(); toggleGPS(false); toggleOutTimes(); fetchEvents();
             } catch(err) { Swal.fire('ผิดพลาด', 'บันทึกข้อมูลไม่สำเร็จ', 'error'); }
         });
 
@@ -156,11 +178,11 @@
                 if(result.data.length === 0) { $('#eventsTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 font-bold">ยังไม่มีกิจกรรม</td></tr>`); } 
                 else {
                     $('#eventsTableBody').html(result.data.map(e => `
-                        <tr class="hover:bg-gray-50/50">
+                        <tr class="hover:bg-gray-50/50 transition-colors">
                             <td class="px-5 py-4"><p class="font-black text-gray-900 text-base">${e.name}</p><p class="text-[10px] text-gray-500 font-bold mt-1"><i class="fas fa-map-marker-alt text-mstPurple"></i> ${e.station}</p></td>
-                            <td class="px-4 py-4"><span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border border-gray-200">${e.type}</span></td>
+                            <td class="px-4 py-4"><span class="bg-gray-100 border border-gray-200 text-gray-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.type}</span></td>
                             <td class="px-4 py-4"><span class="${e.status==='Open' ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200'} border px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.status}</span></td>
-                            <td class="px-5 py-4 text-right"><button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 text-xs shadow-sm"><i class="fas fa-exchange-alt mr-1"></i> เปิด/ปิด</button></td>
+                            <td class="px-5 py-4 text-right"><button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 transition-colors text-xs shadow-sm"><i class="fas fa-exchange-alt mr-1"></i> เปิด/ปิด</button></td>
                         </tr>`).join(''));
                 }
             } catch(err) { $('#eventsTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-red-400 font-bold">ไม่สามารถโหลดข้อมูลได้</td></tr>`); }
@@ -168,7 +190,8 @@
 
         async function toggleEvent(id) {
             Swal.fire({ title: 'กำลังสลับสถานะ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'toggleEventStatus', eventId: id }) }); Swal.close(); fetchEvents(); } catch (err) { Swal.fire('ผิดพลาด', 'อัปเดตไม่สำเร็จ', 'error'); }
+            try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'toggleEventStatus', eventId: id }) }); Swal.close(); fetchEvents(); } 
+            catch (err) { Swal.fire('ผิดพลาด', 'อัปเดตสถานะไม่สำเร็จ', 'error'); }
         }
 
         async function loadUsers() {
@@ -177,15 +200,7 @@
                 const res = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); const result = await res.json();
                 $('#userStats').html(`${result.data.length} <span class="text-sm text-gray-400 font-bold mt-1">คนในระบบ</span>`);
                 if(result.data.length === 0) { $('#usersTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 font-bold">ยังไม่มีนักเรียนลงทะเบียน</td></tr>`); } 
-                else {
-                    $('#usersTableBody').html(result.data.map(u => `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td>
-                            <td class="px-4 py-3 font-black text-gray-900">${u.name}</td>
-                            <td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class}</td>
-                            <td class="px-4 py-3 text-sm font-bold">${u.studentNum}</td>
-                        </tr>`).join(''));
-                }
+                else { $('#usersTableBody').html(result.data.map(u => `<tr class="hover:bg-gray-50 transition-colors"><td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td><td class="px-4 py-3 font-black text-gray-900">${u.name}</td><td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class}</td><td class="px-4 py-3 text-sm font-bold">${u.studentNum}</td></tr>`).join('')); }
                 Swal.close(); $('#usersModal').removeClass('hidden');
             } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดรายชื่อได้', 'error'); }
         }
@@ -194,11 +209,11 @@
             Swal.fire({ title: 'กำลังสร้างไฟล์ CSV...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); Swal.close();
-                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติ', 'info');
+                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการเช็กอินในระบบ', 'info');
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,Station,Action,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
                 result.data.forEach(r => { csvContent += `${new Date(r.Timestamp).toLocaleString('th-TH')},${r.EventName},${r.Station},${r.Action},${r.RefCode},${r.StudentName},${r.Class},${r.StudentNum},${r.StudentID},${r.ScannerName}\n`; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `MSTSC_Logs_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
-            } catch(err) { Swal.fire('ผิดพลาด', 'ดาวน์โหลดไม่สำเร็จ', 'error'); }
+            } catch(err) { Swal.fire('ผิดพลาด', 'ดาวน์โหลดไฟล์ไม่สำเร็จ', 'error'); }
         }
     </script>
 </body>
