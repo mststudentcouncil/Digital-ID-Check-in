@@ -1,31 +1,6 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-    <script>
-        // บังคับให้เปิดในเบราว์เซอร์หลักเท่านั้น (ป้องกันปัญหากล้องไม่ทำงานในแอป LINE)
-        function checkInAppBrowser() {
-            var ua = navigator.userAgent || navigator.vendor || window.opera;
-            var isInApp = (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || 
-                          (ua.indexOf("Instagram") > -1) || (ua.indexOf("Line") > -1) || 
-                          (ua.indexOf("LINE") > -1) || (ua.indexOf("TikTok") > -1);
-            if(isInApp) {
-                document.addEventListener('DOMContentLoaded', function() {
-                    document.body.innerHTML = `
-                        <div class="fixed inset-0 z-[999999] bg-gradient-to-br from-[#f3e5f5] to-[#fffde7] flex flex-col items-center justify-center p-6 text-center">
-                            <div class="bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl w-full max-w-sm border border-white">
-                                <div class="w-20 h-20 bg-purple-100 text-purple-700 rounded-full flex items-center justify-center mb-6 mx-auto shadow-inner"><i class="fas fa-external-link-alt text-3xl"></i></div>
-                                <h2 class="text-2xl font-black text-mstPurple mb-3 tracking-tight">โปรดเปิดในเบราว์เซอร์</h2>
-                                <p class="text-gray-500 mb-8 text-sm leading-relaxed font-medium">ระบบต้องการเข้าถึงกล้อง<br>กรุณากดเมนู <b>(จุด 3 จุด)</b> มุมขวาบนหรือล่าง<br>แล้วเลือก <b class="text-purple-700">"เปิดในเบราว์เซอร์"</b></p>
-                                <button onclick="navigator.clipboard.writeText(window.location.href); alert('คัดลอกลิงก์แล้ว! นำไปวางใน Safari หรือ Chrome ได้เลย');" class="w-full bg-mstPurple text-mstYellow font-bold py-4 rounded-2xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"><i class="fas fa-copy"></i> คัดลอกลิงก์เว็บไซต์</button>
-                            </div>
-                        </div>`;
-                    window.stop();
-                });
-            }
-        }
-        checkInAppBrowser();
-    </script>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Digital ID & Check-in</title>
@@ -42,15 +17,14 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 
     <style>
         body { 
             font-family: 'Anuphan', sans-serif; 
             background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); 
             background-attachment: fixed;
-            touch-action: manipulation; /* ป้องกันการดับเบิ้ลคลิกซูม */
-            overscroll-behavior-y: none; /* ป้องกันการดึงรีเฟรช (Pull to refresh) */
+            touch-action: manipulation; /* ป้องกันการซูม */
+            overscroll-behavior-y: none; /* ป้องกันดึงจอรีเฟรช */
         }
         
         .dvh-screen { height: 100dvh; min-height: 100dvh; }
@@ -61,8 +35,6 @@
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         
-        #reader { border-radius: 2rem; overflow: hidden; border: none !important; background: #000; box-shadow: inset 0 0 30px rgba(0,0,0,0.5); }
-        #reader video { object-fit: cover; }
         .radio-btn:checked + div { background: linear-gradient(135deg, #4A148C, #601cb8); border-color: #4A148C; color: #FFC107; box-shadow: 0 4px 15px rgba(74, 20, 140, 0.2); }
         
         .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -130,13 +102,13 @@
                         <h2 class="text-xl font-black text-gray-900">สร้างบัตรแบบกรอกเอง</h2>
                     </div>
                     <form id="registerManualForm" class="space-y-4">
-                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">ชื่อ-นามสกุล (มีคำนำหน้า) *</label><input type="text" id="regName" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all"></div>
+                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">ชื่อ-นามสกุล (มีคำนำหน้า) *</label><input type="text" id="regName" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple transition-all"></div>
                         <div class="flex gap-3">
-                            <div class="flex-1"><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">ชั้น (เช่น ม.6/5) *</label><input type="text" id="regClass" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center"></div>
-                            <div class="w-1/3"><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">เลขที่ *</label><input type="number" id="regNum" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center"></div>
+                            <div class="flex-1"><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">ชั้น (เช่น ม.6/5) *</label><input type="text" id="regClass" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple transition-all text-center"></div>
+                            <div class="w-1/3"><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">เลขที่ *</label><input type="number" id="regNum" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple transition-all text-center"></div>
                         </div>
-                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">เบอร์โทรศัพท์ *</label><input type="tel" id="regPhone" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center tracking-widest"></div>
-                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">รหัสนักเรียน 5 หลัก (ถ้ามี)</label><input type="text" id="regStdId" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold placeholder-orange-300 shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center tracking-[0.2em]"></div>
+                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">เบอร์โทรศัพท์ *</label><input type="tel" id="regPhone" required class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold shadow-inner focus:bg-white focus:border-mstPurple transition-all text-center tracking-widest"></div>
+                        <div><label class="text-xs font-bold text-mstPurple ml-2 mb-1 block">รหัสนักเรียน 5 หลัก (ถ้ามี)</label><input type="text" id="regStdId" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none text-sm font-bold placeholder-orange-300 shadow-inner focus:bg-white focus:border-mstPurple transition-all text-center tracking-[0.2em]"></div>
                         <button type="submit" class="w-full bg-gradient-to-r from-mstPurple to-[#601cb8] text-mstYellow py-4 rounded-2xl font-black shadow-lg mt-2 text-lg">ยืนยันข้อมูล</button>
                     </form>
                 </div>
@@ -195,10 +167,10 @@
 
                 <div class="glass-heavy rounded-[2rem] p-6 shadow-xl border border-white mb-5">
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1 ml-2">ชื่อกิจกรรม / Event</label>
-                    <input type="text" id="eventName" placeholder="เช่น กีฬาสี, เลือกตั้ง" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 shadow-inner text-gray-900 font-bold mb-4 outline-none focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center">
+                    <input type="text" id="eventName" placeholder="เช่น กีฬาสี, เลือกตั้ง" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 shadow-inner text-gray-900 font-bold mb-4 outline-none focus:bg-white focus:border-mstPurple transition-all text-center">
                     
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1 ml-2">จุดสแกน / Station</label>
-                    <input type="text" id="stationName" placeholder="เช่น ฐานที่ 1, ประตูหน้า" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 shadow-inner text-gray-900 font-bold mb-5 outline-none focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all text-center">
+                    <input type="text" id="stationName" placeholder="เช่น ฐานที่ 1, ประตูหน้า" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 shadow-inner text-gray-900 font-bold mb-5 outline-none focus:bg-white focus:border-mstPurple transition-all text-center">
                     
                     <div class="flex gap-2">
                         <label class="flex-1 cursor-pointer">
@@ -213,19 +185,16 @@
                 </div>
 
                 <div class="glass-heavy rounded-[2rem] p-6 shadow-xl border border-white mb-5 text-center">
-                    <div id="scannerSection" class="hidden relative mb-4">
-                        <div id="reader" class="w-full bg-black aspect-square rounded-[1.5rem] shadow-inner border border-gray-700"></div>
-                        <p class="text-[11px] text-mstPurple mt-4 font-bold animate-pulse bg-purple-50 inline-block px-4 py-1.5 rounded-full border border-purple-100"><i class="fas fa-dot-circle text-red-500 mr-1"></i> กล้องทำงาน (สแกนต่อเนื่องได้เลย)</p>
-                    </div>
-                    <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-indigo-600 text-mstYellow py-6 rounded-2xl font-black shadow-lg text-lg flex items-center justify-center gap-3 hover:-translate-y-1 transition-transform border border-purple-400">
-                        <i class="fas fa-qrcode text-3xl"></i> เปิดกล้องสแกน
+                    <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-indigo-600 text-mstYellow py-8 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-transform text-2xl flex flex-col items-center justify-center gap-3 border border-purple-400">
+                        <i class="fas fa-qrcode text-5xl"></i> เปิดกล้องสแกน QR
                     </button>
+                    <p class="text-[10px] text-gray-500 mt-4 font-bold"><i class="fas fa-info-circle text-mstPurple"></i> ระบบจะสแกนต่อเนื่องให้อัตโนมัติเมื่อสแกนสำเร็จ</p>
                 </div>
 
                 <div class="glass-heavy rounded-[2rem] p-6 shadow-xl border border-white mb-6">
                     <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง (กรณีสแกนไม่ติด)</label>
                     <div class="flex gap-2">
-                        <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none font-black text-center tracking-[0.3em] text-xl shadow-inner focus:bg-white focus:border-mstPurple focus:ring-2 focus:ring-mstPurple/20 transition-all">
+                        <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl border border-transparent bg-white/70 outline-none font-black text-center tracking-[0.3em] text-xl shadow-inner focus:bg-white focus:border-mstPurple transition-all">
                         <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg hover:bg-black transition-colors"><i class="fas fa-paper-plane text-xl"></i></button>
                     </div>
                 </div>
@@ -271,8 +240,8 @@
             <button onclick="$('#verifyScreen').addClass('hidden')" class="absolute top-5 right-5 text-gray-400 w-8 h-8 flex items-center justify-center bg-gray-50 rounded-full shadow-sm hover:text-red-500 transition-colors"><i class="fas fa-times"></i></button>
             <div class="text-center mb-6 mt-2"><div class="w-16 h-16 bg-purple-50 text-mstPurple rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-100 shadow-inner"><i class="fas fa-shield-alt text-2xl"></i></div><h2 class="text-2xl font-black text-gray-900 tracking-tight">ยืนยันสิทธิ์แอดมิน</h2></div>
             <form id="verifyForm" class="space-y-4">
-                <input type="tel" id="v_std_id" placeholder="รหัสนักเรียนสภาฯ" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50/80 text-center tracking-[0.2em] font-bold outline-none shadow-inner focus:bg-white focus:border-mstPurple transition-all focus:ring-2 focus:ring-mstPurple/20" maxlength="5">
-                <input type="tel" id="v_id_card" placeholder="เลข ปชช. 13 หลัก" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50/80 text-center tracking-[0.1em] font-bold outline-none shadow-inner focus:bg-white focus:border-mstPurple transition-all focus:ring-2 focus:ring-mstPurple/20" maxlength="13">
+                <input type="tel" id="v_std_id" placeholder="รหัสนักเรียนสภาฯ" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50/80 text-center tracking-[0.2em] font-bold outline-none shadow-inner focus:bg-white focus:border-mstPurple transition-all" maxlength="5">
+                <input type="tel" id="v_id_card" placeholder="เลข ปชช. 13 หลัก" required class="w-full p-4 rounded-2xl border border-transparent bg-gray-50/80 text-center tracking-[0.1em] font-bold outline-none shadow-inner focus:bg-white focus:border-mstPurple transition-all" maxlength="13">
                 <button type="submit" class="w-full bg-gray-900 text-mstYellow py-4 rounded-2xl font-black shadow-xl mt-4 text-lg active:scale-95 transition-transform">เข้าสู่ระบบ</button>
             </form>
         </div>
@@ -284,7 +253,7 @@
             <div class="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-300/50 shrink-0">
                 <h3 class="text-2xl font-black text-mstPurple flex items-center gap-2 tracking-tight"><i class="fas fa-history text-mstYellow"></i> ประวัติกิจกรรม</h3>
-                <button onclick="$('#historyModal').addClass('hidden')" class="text-gray-500 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm hover:text-red-500 hover:bg-gray-50 transition-colors"><i class="fas fa-times text-lg"></i></button>
+                <button onclick="$('#historyModal').addClass('hidden')" class="text-gray-500 w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm hover:text-red-500 transition-colors"><i class="fas fa-times text-lg"></i></button>
             </div>
             <div id="historyList" class="flex-1 overflow-y-auto no-scrollbar space-y-3 pb-4"></div>
         </div>
@@ -307,7 +276,7 @@
         const LIFF_ID = "2008923798-Py9KNvvH"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec"; 
         
-        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null; let html5QrcodeScanner = null;
+        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null;
         let tempFoundStudent = null;
 
         async function main() {
@@ -494,7 +463,7 @@
                 const result = await res.json();
                 const container = document.getElementById('historyList');
                 if(result.data.length === 0) {
-                    container.innerHTML = '<div class="text-center text-gray-400 mt-16"><div class="w-24 h-24 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><i class="fas fa-folder-open text-4xl text-gray-300"></i></div><p class="font-bold">ยังไม่มีประวัติกิจกรรม</p></div>';
+                    container.innerHTML = '<div class="text-center text-gray-400 mt-16"><div class="w-24 h-24 bg-white/80 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100"><i class="fas fa-folder-open text-4xl text-gray-300"></i></div><p class="font-bold">ยังไม่มีประวัติกิจกรรม</p></div>';
                 } else {
                     container.innerHTML = result.data.map(log => {
                         const isOut = log.Action === 'OUT';
@@ -505,7 +474,7 @@
                             <div class="w-12 h-12 rounded-full flex items-center justify-center shrink-0 border ${colorClass}"><i class="fas ${icon} text-lg"></i></div>
                             <div class="flex-1 min-w-0">
                                 <p class="font-black text-gray-900 text-sm truncate leading-tight">${log.EventName}</p>
-                                <p class="text-[10px] text-gray-500 font-bold mt-1 truncate bg-gray-50 inline-block px-2.5 py-1 rounded-lg border border-gray-100"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p>
+                                <p class="text-[11px] text-gray-500 font-bold mt-1 truncate bg-gray-50 inline-block px-2.5 py-1 rounded-lg border border-gray-100"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p>
                             </div>
                             <div class="text-right shrink-0">
                                 <p class="text-[10px] text-gray-400 font-bold mb-0.5">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p>
@@ -540,30 +509,33 @@
         });
 
         function exitAdmin() {
-            if(html5QrcodeScanner) { html5QrcodeScanner.stop().catch(err => console.log(err)); }
-            $('#scannerSection').addClass('hidden'); $('#startScanBtn').removeClass('hidden');
             nav('studentDashboard');
         }
 
+        // ===============================================
+        // ระบบสแกนผ่าน LIFF (Auto Loop)
+        // ===============================================
         function startContinuousScan() {
             const evtName = $('#eventName').val(); const stnName = $('#stationName').val();
             if(!evtName || !stnName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมและจุดสแกนให้ครบถ้วน', 'warning');
             
-            $('#startScanBtn').addClass('hidden'); $('#scannerSection').removeClass('hidden');
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            html5QrcodeScanner.start(
-                { facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } },
-                (decodedText) => {
-                    if (html5QrcodeScanner.getState() !== 2) return; 
+            if (liff.scanCodeV2) {
+                liff.scanCodeV2().then(result => {
+                    const decodedText = result.value;
                     if(decodedText.startsWith("MSTSC_")) {
-                        html5QrcodeScanner.pause(); 
                         processAdminCheckIn(decodedText, null);
+                    } else {
+                        Swal.fire('ผิดพลาด', 'QR Code ไม่ใช่ของระบบ', 'error').then(() => {
+                            // ให้เปิดกล้องต่อเมื่อกด OK
+                            startContinuousScan();
+                        });
                     }
-                }, (errorMessage) => { }
-            ).catch(err => {
-                $('#scannerSection').addClass('hidden'); $('#startScanBtn').removeClass('hidden');
-                Swal.fire('ข้อผิดพลาดกล้อง', 'ไม่สามารถเปิดกล้องได้ โปรดอนุญาตการใช้กล้อง', 'error');
-            });
+                }).catch(err => {
+                    console.log("Scanner closed by user");
+                });
+            } else {
+                Swal.fire('ข้อผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบสแกนกล้องของ LIFF', 'error');
+            }
         }
 
         function recordManualScan() {
@@ -577,7 +549,7 @@
             const actionType = $('input[name="scanType"]:checked').val();
             if(!evtName || !stnName) return Swal.fire('แจ้งเตือน', 'กรุณาตั้งชื่อกิจกรรมและจุดสแกน', 'warning');
 
-            setLoader('บันทึก...');
+            setLoader('กำลังบันทึก...');
             try {
                 const payload = { action: 'recordCheckIn', refCode: refCode, stdId: stdId, eventName: evtName, stationName: stnName, actionType: actionType, adminName: adminName };
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
@@ -587,25 +559,35 @@
                 const actionText = actionType === 'IN' ? 'เข้า' : 'ออก';
                 
                 if(data.status === 'success') { 
-                    Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold text-gray-700 shadow-sm">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false }).then(() => { resumeScan(); }); 
+                    Swal.fire({ 
+                        title: `เช็กชื่อ${actionText} สำเร็จ!`, 
+                        html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold text-gray-700 shadow-sm">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, 
+                        icon: 'success', 
+                        timer: 1500, 
+                        showConfirmButton: false 
+                    }).then(() => { resumeScan(refCode); }); 
                 } 
                 else if (data.status === 'duplicate_in') {
-                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อเข้าจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(); });
+                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อเข้าจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(refCode); });
                 }
                 else if (data.status === 'duplicate_out') {
-                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อออกจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(); });
+                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b><br>เช็กชื่อออกจุดนี้ไปแล้ว`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(refCode); });
                 }
                 else { 
-                    Swal.fire('ไม่พบผู้ใช้', 'ไม่พบข้อมูลบัตรนี้ในระบบ', 'error').then(() => { resumeScan(); }); 
+                    Swal.fire('ไม่พบผู้ใช้', 'ไม่พบข้อมูลบัตรนี้ในระบบ', 'error').then(() => { resumeScan(refCode); }); 
                 }
             } catch (e) { 
-                hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error').then(() => { resumeScan(); }); 
+                hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error').then(() => { resumeScan(refCode); }); 
             }
         }
 
-        function resumeScan() {
+        // ถ้ายิงผ่านสแกนให้เปิดกล้องใหม่ ถ้ากรอกมือให้เคลียร์ช่อง
+        function resumeScan(wasScanned) {
             $('#manualStdId').val('');
-            if(html5QrcodeScanner && html5QrcodeScanner.getState() === 3) html5QrcodeScanner.resume();
+            if(wasScanned) {
+                // หน่วงเวลาเล็กน้อยเพื่อให้กล้อง LIFF ทำงานได้เสถียรขึ้น
+                setTimeout(() => { startContinuousScan(); }, 300);
+            }
         }
 
         async function downloadCSV() {
