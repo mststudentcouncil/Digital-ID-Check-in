@@ -15,11 +15,11 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.0/dist/JsBarcode.all.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        /* ล็อก Scroll ของ Body ทั้งหมด */
-        body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); touch-action: manipulation; overscroll-behavior-y: none; overflow: hidden; margin: 0; padding: 0; }
+        body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); background-attachment: fixed; touch-action: manipulation; overscroll-behavior-y: none; overflow: hidden; margin: 0; padding: 0; }
         .dvh-screen { height: 100dvh; min-height: 100dvh; }
         .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05); }
         .glass-heavy { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 1); box-shadow: 0 10px 40px 0 rgba(74, 20, 140, 0.08); }
@@ -40,6 +40,10 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @supports (padding-bottom: env(safe-area-inset-bottom)) { .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); } }
+
+        /* ปรับแต่งกล้อง Full Screen ให้เนียนเป๊ะ */
+        #reader { width: 100%; height: 100%; border: none !important; }
+        #reader video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
     </style>
 </head>
 <body class="text-gray-800 antialiased flex justify-center">
@@ -111,7 +115,6 @@
 
                 <div class="perspective-1000 w-full mb-6 cursor-pointer" onclick="this.classList.toggle('flipped')">
                     <div class="preserve-3d relative w-full h-[420px] rounded-[2.5rem] shadow-2xl">
-                        
                         <div class="absolute inset-0 backface-hidden bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center p-6 z-10">
                             <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-50 to-transparent -z-10"></div>
                             <p class="absolute top-4 right-5 text-gray-300 text-[10px] font-bold"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
@@ -131,11 +134,7 @@
                         <div class="absolute inset-0 backface-hidden rotate-y-180 bg-white border border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center p-6 z-0 shadow-inner">
                             <p class="absolute top-4 right-5 text-gray-300 text-[10px] font-bold"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
                             <h3 class="text-[10px] font-black text-gray-400 mb-4 tracking-[0.2em] uppercase"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
-                            
-                            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm w-full flex justify-center mb-6">
-                                <svg id="barcode" class="w-full max-h-16"></svg>
-                            </div>
-                            
+                            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm w-full flex justify-center mb-6"><svg id="barcode" class="w-full max-h-16"></svg></div>
                             <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-md relative group hover:scale-105 transition-transform mx-auto" onclick="event.stopPropagation(); expandQR();">
                                 <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto"></div>
                                 <div class="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-2xl drop-shadow-md"></i></div>
@@ -151,9 +150,7 @@
                 </div>
 
                 <div class="flex justify-center items-center gap-4 pb-8">
-                    <button onclick="checkAdminAuth()" class="text-[11px] text-gray-500 font-bold bg-white/80 px-5 py-2.5 rounded-full border border-gray-200 shadow-sm hover:text-mstPurple transition-colors flex items-center gap-1.5">
-                        <i class="fas fa-shield-alt"></i> สำหรับสภานักเรียน
-                    </button>
+                    <button onclick="checkAdminAuth()" class="text-[11px] text-gray-500 font-bold bg-white/80 px-5 py-2.5 rounded-full border border-gray-200 shadow-sm hover:text-mstPurple transition-colors flex items-center gap-1.5"><i class="fas fa-shield-alt"></i> สำหรับสภานักเรียน</button>
                 </div>
             </section>
 
@@ -162,8 +159,7 @@
                     <h3 class="text-xl font-black text-mstPurple flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500"></i> เช็กอิน GPS</h3>
                     <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4" id="selfCheckInList">
-                    </div>
+                <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-safe" id="selfCheckInList"></div>
             </section>
 
             <section id="historyPage" class="hidden fade-in flex-1 flex flex-col bg-[#f3e5f5] absolute inset-0 z-50">
@@ -171,8 +167,7 @@
                     <h3 class="text-xl font-black text-mstPurple flex items-center gap-2"><i class="fas fa-history text-mstYellow"></i> ประวัติของฉัน</h3>
                     <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center"><i class="fas fa-times"></i></button>
                 </div>
-                <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3" id="historyList">
-                    </div>
+                <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 pb-safe" id="historyList"></div>
             </section>
 
             <section id="editProfilePage" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-50 bg-[#f3e5f5]">
@@ -229,44 +224,46 @@
                 </div>
             </section>
 
-            <section id="adminDashboard" class="hidden fade-in w-full pb-10 overflow-y-auto p-4 absolute inset-0 z-40 bg-[#f3e5f5]">
-                <div class="glass-heavy rounded-[2.5rem] p-6 mb-5 shadow-xl border border-white relative overflow-hidden mt-4">
-                    <div class="flex justify-between items-start">
-                        <div><h2 class="font-black text-2xl mb-1 text-mstPurple">Scanner Mode</h2><p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest"><i class="fas fa-user-check text-mstYellow"></i> <span id="showAdminName"></span></p></div>
-                        <button onclick="exitAdmin()" class="bg-white text-gray-500 w-10 h-10 rounded-full shadow-sm border border-gray-100 hover:text-red-500"><i class="fas fa-times"></i></button>
+            <section id="adminDashboard" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-40 bg-[#f3e5f5]">
+                <div class="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col pb-safe relative">
+                    <div class="glass-heavy rounded-[2.5rem] p-6 mb-5 shadow-xl border border-white relative overflow-hidden mt-4 shrink-0">
+                        <div class="flex justify-between items-start">
+                            <div><h2 class="font-black text-2xl mb-1 text-mstPurple">Scanner Mode</h2><p class="text-[10px] text-gray-500 font-bold uppercase tracking-widest"><i class="fas fa-user-check text-mstYellow"></i> <span id="showAdminName"></span></p></div>
+                            <button onclick="exitAdmin()" class="bg-white text-gray-500 w-10 h-10 rounded-full shadow-sm border border-gray-100 hover:text-red-500"><i class="fas fa-times"></i></button>
+                        </div>
                     </div>
-                </div>
 
-                <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5">
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-2">เลือกกิจกรรมที่เปิดอยู่</label>
-                    <select id="eventSelect" class="w-full p-4 rounded-2xl bg-gray-50 text-mstPurple font-bold mb-5 outline-none text-center border-none shadow-inner appearance-none">
-                        <option value="">-- กำลังโหลดกิจกรรม --</option>
-                    </select>
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 shrink-0">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-2">เลือกกิจกรรมที่เปิดอยู่</label>
+                        <select id="eventSelect" class="w-full p-4 rounded-2xl bg-gray-50 text-mstPurple font-bold mb-5 outline-none text-center border-none shadow-inner appearance-none">
+                            <option value="">-- กำลังโหลดกิจกรรม --</option>
+                        </select>
 
-                    <div class="flex gap-2">
-                        <label class="flex-1 cursor-pointer">
-                            <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
-                            <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
-                        </label>
-                        <label class="flex-1 cursor-pointer" id="outRadioContainer">
-                            <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
-                            <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
-                        </label>
+                        <div class="flex gap-2">
+                            <label class="flex-1 cursor-pointer">
+                                <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
+                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
+                            </label>
+                            <label class="flex-1 cursor-pointer" id="outRadioContainer">
+                                <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
+                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
+                            </label>
+                        </div>
                     </div>
-                </div>
 
-                <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 text-center">
-                    <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-6 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-transform text-xl flex items-center justify-center gap-2">
-                        <i class="fas fa-qrcode text-2xl text-mstYellow"></i> เปิดกล้องสแกน QR
-                    </button>
-                    <p class="text-[10px] text-gray-500 mt-4 font-bold"><i class="fas fa-info-circle text-mstPurple"></i> ระบบจะเปิดกล้องซ้ำอัตโนมัติเมื่อสแกนสำเร็จ</p>
-                </div>
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 text-center shrink-0">
+                        <button id="startScanBtn" onclick="startContinuousScan()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-6 rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-transform text-xl flex items-center justify-center gap-2">
+                            <i class="fas fa-qrcode text-2xl text-mstYellow"></i> เปิดหน้าต่างสแกน
+                        </button>
+                        <p class="text-[10px] text-gray-500 mt-4 font-bold"><i class="fas fa-info-circle text-mstPurple"></i> ระบบจะขออนุญาตใช้งานกล้องเพียงครั้งเดียว</p>
+                    </div>
 
-                <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-6">
-                    <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง (Manual)</label>
-                    <div class="flex gap-2">
-                        <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 outline-none font-black text-center tracking-[0.2em] text-xl shadow-inner border-none transition-all">
-                        <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg"><i class="fas fa-paper-plane text-xl"></i></button>
+                    <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-6 shrink-0 mt-auto">
+                        <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง</label>
+                        <div class="flex gap-2">
+                            <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 outline-none font-black text-center tracking-[0.2em] text-xl shadow-inner border-none transition-all">
+                            <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg"><i class="fas fa-paper-plane text-xl"></i></button>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -274,11 +271,33 @@
         </div>
     </main>
 
+    <section id="scannerOverlay" class="hidden fixed inset-0 z-[200] bg-black flex-col fade-in">
+        <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20">
+            <div class="text-white">
+                <h3 class="font-black text-lg text-mstYellow tracking-wider"><i class="fas fa-qrcode"></i> SCANNER</h3>
+                <p class="text-[10px] opacity-80" id="scanStatusText">หันกล้องไปที่ QR Code ของเพื่อน</p>
+            </div>
+            <button onclick="stopScan()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md hover:bg-red-500 transition-colors"><i class="fas fa-times"></i></button>
+        </div>
+        
+        <div class="flex-1 relative flex items-center justify-center overflow-hidden">
+            <div id="reader" class="w-full h-full object-cover"></div>
+            <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
+                <div class="w-64 h-64 border-[3px] border-mstYellow rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] relative">
+                    <div class="absolute -top-1 -left-1 w-6 h-6 border-t-[5px] border-l-[5px] border-mstYellow rounded-tl-[2rem]"></div>
+                    <div class="absolute -top-1 -right-1 w-6 h-6 border-t-[5px] border-r-[5px] border-mstYellow rounded-tr-[2rem]"></div>
+                    <div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-[5px] border-l-[5px] border-mstYellow rounded-bl-[2rem]"></div>
+                    <div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-[5px] border-r-[5px] border-mstYellow rounded-br-[2rem]"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <script>
         const LIFF_ID = "2008923798-Py9KNvvH"; 
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec"; 
         
-        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null;
+        let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null; let html5QrCode = null;
         let tempFoundStudent = null; let activeEvents = []; let myHistoryCache = [];
 
         async function main() {
@@ -399,20 +418,20 @@
             userData.studentId = newId; renderCard(); nav('studentDashboard'); hideLoader(); Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success');
         }
 
-        // --- ดูประวัติ (ระบบใหม่ UI แบบ Full Page) ---
+        // --- ระบบดูประวัติ (Full Page) ---
         async function loadMyHistory() {
             setLoader('กำลังโหลดประวัติ...');
             try {
                 const res = await fetch(`${GAS_URL}?action=getMyHistory&refCode=${userData.refCode}&stdId=${userData.studentId}`, { redirect: "follow" });
                 const result = await res.json();
-                myHistoryCache = result.data; // เก็บไว้ใช้กับระบบ Self-CheckIn
+                myHistoryCache = result.data || [];
                 
                 const container = document.getElementById('historyList');
                 if(result.data.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 mt-20"><div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm"><i class="fas fa-folder-open text-3xl opacity-50"></i></div><p class="font-bold text-sm">ยังไม่มีประวัติกิจกรรม</p></div>'; } 
                 else {
                     container.innerHTML = result.data.map(log => {
                         const isOut = log.Action === 'OUT'; const colorClass = isOut ? 'text-red-500 bg-red-50 border-red-100' : 'text-green-500 bg-green-50 border-green-100'; const icon = isOut ? 'fa-sign-out-alt' : 'fa-sign-in-alt';
-                        return `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${colorClass}"><i class="fas ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><p class="font-black text-gray-900 text-sm truncate">${log.EventName}</p><p class="text-[10px] text-gray-500 font-bold mt-1 bg-gray-50 inline-block px-2 rounded"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p></div><div class="text-right shrink-0"><p class="text-[9px] text-gray-400 font-bold">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p><p class="text-xs font-black text-mstPurple">${new Date(log.Timestamp).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p></div></div>`
+                        return `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"><div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${colorClass}"><i class="fas ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><p class="font-black text-gray-900 text-sm truncate">${log.EventName}</p><p class="text-[10px] text-gray-500 font-bold mt-1 bg-gray-50 inline-block px-2 rounded"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p></div><div class="text-right shrink-0"><p class="text-[9px] text-gray-400 font-bold">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p><p class="text-xs font-black text-mstPurple">${new Date(log.Timestamp).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p></div></div>`
                     }).join('');
                 }
                 nav('historyPage');
@@ -420,17 +439,15 @@
             hideLoader();
         }
 
-        // ฟังก์ชันช่วยจัดการเวลา
         function formatTimeText(isoString) {
             if(!isoString) return ''; const d = new Date(isoString);
             return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
         }
 
-        // --- ระบบ Self Check-in (อัปเกรดโชว์สถานะ) ---
+        // --- ระบบ Self Check-in ---
         async function openSelfCheckIn() {
             setLoader('โหลดกิจกรรม...');
             try {
-                // ดึงประวัติก่อนเพื่อเช็กว่าเคยทำรายการไปหรือยัง
                 const histRes = await fetch(`${GAS_URL}?action=getMyHistory&refCode=${userData.refCode}&stdId=${userData.studentId}`, { redirect: "follow" });
                 const histData = await histRes.json();
                 myHistoryCache = histData.data || [];
@@ -446,7 +463,6 @@
                     container.innerHTML = activeEvents.map(evt => {
                         const allowOut = evt.allowOut === true || String(evt.allowOut).toLowerCase() === 'true';
                         
-                        // ตรวจสอบสถานะ IN
                         let hasIn = myHistoryCache.find(h => h.EventName === evt.name && h.Station === evt.station && h.Action === 'IN');
                         let inBtn = '', inStatus = '';
                         if (hasIn) {
@@ -460,10 +476,9 @@
                             inStatus = `<p class="text-[9px] text-red-500 font-bold mt-1">หมดเวลาเช็กอินแล้ว</p>`;
                         } else {
                             inBtn = `<button onclick="processSelfCheckIn('${evt.id}', 'IN')" class="flex-1 bg-green-50 text-green-600 py-3 rounded-xl font-black border border-green-200 hover:-translate-y-1 transition-transform shadow-sm"><i class="fas fa-sign-in-alt"></i> เช็กอิน</button>`;
-                            inStatus = evt.inEnd ? `<p class="text-[9px] text-green-600 font-bold mt-1">ปิดระบบเวลา ${formatTimeText(evt.inEnd)} น.</p>` : `<p class="text-[9px] text-green-600 font-bold mt-1">เปิดระบบแล้ว</p>`;
+                            inStatus = evt.inEnd ? `<p class="text-[9px] text-green-600 font-bold mt-1">ปิดเวลา ${formatTimeText(evt.inEnd)} น.</p>` : `<p class="text-[9px] text-green-600 font-bold mt-1">เปิดระบบแล้ว</p>`;
                         }
 
-                        // ตรวจสอบสถานะ OUT
                         let outSection = '';
                         if (allowOut) {
                             let hasOut = myHistoryCache.find(h => h.EventName === evt.name && h.Station === evt.station && h.Action === 'OUT');
@@ -479,7 +494,7 @@
                                 outStatus = `<p class="text-[9px] text-red-500 font-bold mt-1">หมดเวลาเช็กเอาต์แล้ว</p>`;
                             } else {
                                 outBtn = `<button onclick="processSelfCheckIn('${evt.id}', 'OUT')" class="flex-1 bg-red-50 text-red-600 py-3 rounded-xl font-black border border-red-200 hover:-translate-y-1 transition-transform shadow-sm"><i class="fas fa-sign-out-alt"></i> เช็กเอาต์</button>`;
-                                outStatus = evt.outEnd ? `<p class="text-[9px] text-red-500 font-bold mt-1">ปิดระบบเวลา ${formatTimeText(evt.outEnd)} น.</p>` : `<p class="text-[9px] text-red-500 font-bold mt-1">เปิดระบบแล้ว</p>`;
+                                outStatus = evt.outEnd ? `<p class="text-[9px] text-red-500 font-bold mt-1">ปิดเวลา ${formatTimeText(evt.outEnd)} น.</p>` : `<p class="text-[9px] text-red-500 font-bold mt-1">เปิดระบบแล้ว</p>`;
                             }
                             outSection = `<div class="flex-1 flex flex-col">${outBtn}${outStatus}</div>`;
                         }
@@ -539,9 +554,14 @@
         }
         
         $('#eventSelect').on('change', function() {
-            const evId = $(this).val(); const ev = activeEvents.find(e => e.id === evId);
-            if(ev && (ev.allowOut === true || String(ev.allowOut).toLowerCase() === 'true')) { $('#outRadioContainer').removeClass('hidden'); } 
-            else { $('#outRadioContainer').addClass('hidden'); $('input[name="scanType"][value="IN"]').prop('checked', true); }
+            const evId = $(this).val();
+            const ev = activeEvents.find(e => e.id === evId);
+            if(ev && (ev.allowOut === true || String(ev.allowOut).toLowerCase() === 'true')) {
+                $('#outRadioContainer').removeClass('hidden');
+            } else {
+                $('#outRadioContainer').addClass('hidden');
+                $('input[name="scanType"][value="IN"]').prop('checked', true);
+            }
         });
 
         $('#verifyForm').on('submit', async function(e) {
@@ -553,20 +573,47 @@
             } catch (e) {} hideLoader();
         });
 
-        function exitAdmin() { nav('studentDashboard'); }
+        function exitAdmin() { stopScan(); nav('studentDashboard'); }
 
         function playErrorSound() { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'square'; oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3); }
 
+        // --- ระบบกล้อง Html5Qrcode เต็มจอ ---
         function startContinuousScan() {
             const evtId = $('#eventSelect').val(); if(!evtId) return Swal.fire('แจ้งเตือน', 'กรุณาเลือกกิจกรรมก่อนสแกน', 'warning');
             
-            if (liff.scanCodeV2) {
-                liff.scanCodeV2().then(result => {
-                    const decodedText = result.value;
-                    if(decodedText.startsWith("MSTSC_")) { processStaffCheckIn(decodedText, null); } 
-                    else { Swal.fire('ผิดพลาด', 'QR Code ไม่ใช่ของระบบ', 'error').then(() => { startContinuousScan(); }); }
-                }).catch(err => { console.log("Scanner closed by user"); });
-            } else { Swal.fire('ข้อผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบสแกนกล้องของ LIFF', 'error'); }
+            $('#scannerOverlay').removeClass('hidden').addClass('flex');
+            
+            html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 250 } }, 
+                (decodedText) => {
+                    if (html5QrCode.getState() !== 2) return; 
+                    if(decodedText.startsWith("MSTSC_")) { 
+                        html5QrCode.pause(); 
+                        processStaffCheckIn(decodedText, null); 
+                    } else { 
+                        Swal.fire({title: 'ผิดพลาด', text: 'QR Code ไม่ใช่ของระบบ', icon: 'error', target: document.getElementById('scannerOverlay')}).then(() => { html5QrCode.resume(); }); 
+                    }
+                }, 
+                (err) => {}
+            ).catch(err => { 
+                $('#scannerOverlay').removeClass('flex').addClass('hidden'); 
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเปิดกล้องได้ กรุณาตรวจสอบการอนุญาตใช้งานกล้อง', 'error'); 
+            });
+        }
+
+        function stopScan() {
+            if(html5QrCode) {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                    $('#scannerOverlay').removeClass('flex').addClass('hidden');
+                }).catch(err => {
+                    $('#scannerOverlay').removeClass('flex').addClass('hidden');
+                });
+            } else {
+                $('#scannerOverlay').removeClass('flex').addClass('hidden');
+            }
         }
 
         function recordManualScan() {
@@ -578,20 +625,39 @@
 
         async function processStaffCheckIn(refCode, stdId) {
             const evtId = $('#eventSelect').val(); const actionType = $('input[name="scanType"]:checked').val();
-            setLoader('บันทึก...');
+            
+            // ใช้ SweetAlert ที่ target ไปที่ scannerOverlay ถ้าเปิดกล้องอยู่
+            const swalTarget = $('#scannerOverlay').hasClass('flex') ? document.getElementById('scannerOverlay') : document.body;
+            Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, target: swalTarget, didOpen: () => Swal.showLoading() });
+
             try {
                 const payload = { action: 'recordCheckIn', refCode: refCode, stdId: stdId, eventId: evtId, actionType: actionType, adminName: adminName };
                 const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
-                const data = await res.json(); hideLoader();
+                const data = await res.json(); 
                 
                 const actionText = actionType === 'IN' ? 'เข้า' : 'ออก';
-                if(data.status === 'success') { Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false }).then(() => { resumeScan(refCode); }); } 
-                else if (data.status === 'duplicate_in' || data.status === 'duplicate_out') { playErrorSound(); Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b>`, icon: 'warning', confirmButtonColor: '#4A148C' }).then(() => { resumeScan(refCode); }); }
-                else { Swal.fire('ผิดพลาด', data.message || 'ไม่พบข้อมูลในระบบ', 'error').then(() => { resumeScan(refCode); }); }
-            } catch (e) { hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error').then(() => { resumeScan(refCode); }); }
+
+                if(data.status === 'success') { 
+                    Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false, target: swalTarget }).then(() => { resumeScan(refCode); }); 
+                } 
+                else if (data.status === 'duplicate_in' || data.status === 'duplicate_out') { 
+                    playErrorSound(); 
+                    Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b>`, icon: 'warning', confirmButtonColor: '#4A148C', target: swalTarget }).then(() => { resumeScan(refCode); }); 
+                }
+                else { 
+                    Swal.fire({title: 'ผิดพลาด', text: data.message || 'ไม่พบข้อมูลในระบบ', icon: 'error', target: swalTarget}).then(() => { resumeScan(refCode); }); 
+                }
+            } catch (e) { 
+                Swal.fire({title: 'Error', text: 'บันทึกไม่สำเร็จ', icon: 'error', target: swalTarget}).then(() => { resumeScan(refCode); }); 
+            }
         }
 
-        function resumeScan(wasScanned) { $('#manualStdId').val(''); if(wasScanned) setTimeout(() => { startContinuousScan(); }, 500); }
+        function resumeScan(wasScanned) { 
+            $('#manualStdId').val(''); 
+            if(wasScanned && html5QrCode && html5QrCode.getState() === 3) {
+                html5QrCode.resume(); 
+            } 
+        }
     </script>
 </body>
 </html>
