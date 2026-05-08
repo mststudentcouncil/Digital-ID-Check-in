@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Master Admin - Digital ID</title>
     <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,6 +10,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
     <style>
         body { font-family: 'Anuphan', sans-serif; background: linear-gradient(135deg, #f3e5f5 0%, #fffde7 100%); background-attachment: fixed; margin:0; overflow: hidden; }
         .dvh-screen { height: 100dvh; min-height: 100dvh; }
@@ -17,6 +22,7 @@
         .fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         .no-scrollbar::-webkit-scrollbar { display: none; }
+        #map { height: 300px; width: 100%; border-radius: 1rem; z-index: 10; }
     </style>
 </head>
 <body class="text-gray-800 antialiased w-full dvh-screen flex flex-col relative">
@@ -55,16 +61,16 @@
                                 <div class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm mt-4">
                                     <h3 class="text-sm font-black text-mstPurple mb-3"><i class="far fa-clock"></i> ตั้งค่าเวลาเช็กอิน (IN)</h3>
                                     <div class="grid grid-cols-2 gap-4 mb-4">
-                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนเข้า</label><input type="datetime-local" id="c_inStart" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs"></div>
-                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนเข้า</label><input type="datetime-local" id="c_inEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs"></div>
+                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนเข้า</label><input type="datetime-local" id="c_inStart" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold"></div>
+                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนเข้า</label><input type="datetime-local" id="c_inEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-gray-50 text-xs font-bold"></div>
                                     </div>
                                     <label class="flex items-center gap-2 cursor-pointer mt-4 pt-4 border-t border-gray-100">
                                         <input type="checkbox" id="c_allowOut" class="w-5 h-5 text-mstPurple rounded" onchange="toggleOutTimes()">
                                         <span class="text-sm font-bold text-gray-700">เปิดให้มีการ เช็กเอาต์ (OUT) ออกจากกิจกรรมด้วย</span>
                                     </label>
                                     <div id="outTimesDiv" class="grid grid-cols-2 gap-4 mt-4 hidden">
-                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนออก</label><input type="datetime-local" id="c_outStart" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs"></div>
-                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนออก</label><input type="datetime-local" id="c_outEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs"></div>
+                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">เริ่มเปิดสแกนออก</label><input type="datetime-local" id="c_outStart" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs font-bold"></div>
+                                        <div><label class="text-[10px] font-bold text-gray-400 block mb-1">ปิดสแกนออก</label><input type="datetime-local" id="c_outEnd" class="w-full p-3 rounded-xl border border-gray-200 bg-red-50 text-xs font-bold"></div>
                                     </div>
                                 </div>
                                 <div>
@@ -74,14 +80,23 @@
                                         <label class="flex-1 cursor-pointer"><input type="radio" name="c_type" value="Self" onchange="toggleGPS(true)" class="hidden peer"><div class="border-2 border-transparent bg-gray-50 text-gray-500 rounded-2xl p-4 text-center font-black transition-all shadow-inner peer-checked:bg-gradient-to-r peer-checked:from-mstPurple peer-checked:to-purple-600 peer-checked:text-white">นักเรียนกดเอง (GPS)</div></label>
                                     </div>
                                 </div>
+                                
                                 <div id="gpsSettings" class="hidden bg-purple-50 p-6 rounded-[2rem] border border-purple-100 shadow-inner mt-4">
-                                    <div class="flex justify-between items-center mb-4"><div class="text-[11px] text-mstPurple font-bold"><i class="fas fa-map-marker-alt"></i> ตั้งพิกัดสำหรับเช็กอินด้วยตนเอง</div><button type="button" onclick="getCurrentGPS()" class="bg-white text-mstPurple px-4 py-2 rounded-xl text-xs font-black shadow-sm border border-purple-100 hover:bg-purple-100 transition-colors"><i class="fas fa-satellite-dish"></i> ดึงตำแหน่งปัจจุบัน</button></div>
-                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                        <div><input type="text" id="c_lat" placeholder="ละติจูด (Lat)" class="w-full p-4 rounded-xl bg-white outline-none text-sm font-bold shadow-sm"></div>
-                                        <div><input type="text" id="c_lng" placeholder="ลองจิจูด (Lng)" class="w-full p-4 rounded-xl bg-white outline-none text-sm font-bold shadow-sm"></div>
-                                        <div><input type="number" id="c_radius" placeholder="รัศมี (เมตร)" value="50" class="w-full p-4 rounded-xl bg-white outline-none text-sm text-center font-black text-mstPurple shadow-sm"></div>
+                                    <div class="flex justify-between items-center mb-3">
+                                        <div class="text-[11px] text-mstPurple font-bold"><i class="fas fa-map-marker-alt"></i> เลื่อนหมุดบนแผนที่เพื่อตั้งพิกัด</div>
+                                        <button type="button" onclick="getCurrentGPS()" class="bg-white text-mstPurple px-3 py-1.5 rounded-lg text-xs font-black shadow-sm border border-purple-100 hover:bg-purple-100 transition-colors"><i class="fas fa-crosshairs"></i> ดึงพิกัดจากเครื่องคุณ</button>
                                     </div>
+                                    
+                                    <div id="map" class="mb-4 shadow-md border-2 border-white"></div>
+                                    
+                                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                        <div><input type="text" id="c_lat" placeholder="ละติจูด (Lat)" class="w-full p-3 rounded-xl bg-white outline-none text-xs font-bold shadow-sm text-gray-500" readonly></div>
+                                        <div><input type="text" id="c_lng" placeholder="ลองจิจูด (Lng)" class="w-full p-3 rounded-xl bg-white outline-none text-xs font-bold shadow-sm text-gray-500" readonly></div>
+                                        <div><input type="number" id="c_radius" placeholder="รัศมี (เมตร)" value="50" class="w-full p-3 rounded-xl bg-white outline-none text-sm text-center font-black text-mstPurple shadow-sm border-2 border-purple-200"></div>
+                                    </div>
+                                    <p class="text-[9px] text-gray-400 mt-2 text-center">หากนักเรียนอยู่นอกวงกลมรัศมี จะไม่สามารถเช็กอินได้</p>
                                 </div>
+
                                 <button type="submit" class="w-full bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black hover:bg-black transition-colors shadow-lg mt-4 text-lg">บันทึกกิจกรรม</button>
                             </form>
                         </div>
@@ -93,11 +108,15 @@
                     </div>
 
                     <div class="space-y-6">
-                        <div class="glass-heavy p-6 rounded-[2.5rem] shadow-xl border border-white text-center">
-                            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fas fa-users text-2xl"></i></div>
-                            <h2 class="text-lg font-black mb-1">ฐานข้อมูลนักเรียน</h2>
-                            <div id="userStats" class="text-center font-black text-5xl text-mstPurple bg-white py-6 rounded-3xl border border-gray-100 shadow-inner mb-4 flex flex-col items-center justify-center"><span class="animate-pulse">0</span><span class="text-sm text-gray-400 font-bold mt-1">คนในระบบ</span></div>
-                            <button onclick="nav('usersPage')" class="w-full bg-blue-50 text-blue-600 font-bold py-4 rounded-2xl hover:bg-blue-100 transition-colors"><i class="fas fa-sync-alt"></i> ดูรายชื่อทั้งหมด</button>
+                        <div class="glass-heavy p-6 rounded-[2.5rem] shadow-xl border border-white text-center relative overflow-hidden">
+                            <div class="w-16 h-16 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 relative z-10"><i class="fas fa-users text-2xl"></i></div>
+                            <h2 class="text-lg font-black mb-1 relative z-10">ฐานข้อมูลนักเรียน</h2>
+                            <p class="text-[10px] text-gray-500 mb-5 font-bold uppercase tracking-widest relative z-10">ผู้ลงทะเบียน Digital ID</p>
+                            <div id="userStats" class="text-center font-black text-5xl text-mstPurple bg-white py-6 rounded-3xl border border-gray-100 shadow-inner mb-4 flex flex-col items-center justify-center relative z-10"><span class="animate-pulse">0</span><span class="text-sm text-gray-400 font-bold mt-1">คนในระบบ</span></div>
+                            <div class="grid grid-cols-2 gap-2 relative z-10">
+                                <button onclick="nav('usersPage')" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors shadow-sm text-xs"><i class="fas fa-list"></i> ดูรายชื่อ</button>
+                                <button onclick="syncAllUsers()" class="bg-purple-50 text-mstPurple font-bold py-3 rounded-xl hover:bg-purple-100 transition-colors shadow-sm text-xs"><i class="fas fa-sync-alt"></i> ซิงก์ ร.ร.</button>
+                            </div>
                         </div>
 
                         <div class="glass-heavy p-6 rounded-[2.5rem] shadow-xl border border-white text-center">
@@ -119,7 +138,7 @@
                     </div>
                     <div class="flex-1 overflow-auto p-6 no-scrollbar">
                         <div class="bg-white rounded-2xl shadow-inner border border-gray-100 overflow-hidden">
-                            <table class="w-full text-sm text-left whitespace-nowrap"><thead class="text-[11px] bg-purple-50 text-mstPurple uppercase tracking-widest"><tr><th class="px-5 py-3">รหัส</th><th class="px-4 py-3">ชื่อ-สกุล</th><th class="px-4 py-3">ชั้น</th><th class="px-4 py-3">เลขที่</th></tr></thead><tbody id="usersTableBody" class="divide-y divide-gray-50"></tbody></table>
+                            <table class="w-full text-sm text-left whitespace-nowrap"><thead class="text-[11px] bg-purple-50 text-mstPurple uppercase tracking-widest"><tr><th class="px-5 py-3">รหัส</th><th class="px-4 py-3">ชื่อ-สกุล</th><th class="px-4 py-3">ชั้น</th><th class="px-4 py-3">สถานะ</th></tr></thead><tbody id="usersTableBody" class="divide-y divide-gray-50"></tbody></table>
                         </div>
                     </div>
                 </div>
@@ -131,26 +150,71 @@
     <script>
         const GAS_URL = "https://script.google.com/macros/s/AKfycbx8eeLBeuAy6MQT8QD58xaVdXEyJifrGg7aV-JUbqNnR680oXQ0Jnm8n98JqLEIHNbL/exec";
         
+        let map, marker, circle;
+        
         $(document).ready(function() { if(sessionStorage.getItem("adminName")) loadDashboard(); else nav('loginPage'); });
 
         function nav(pageId) { 
             $('#contentArea > section').addClass('hidden'); $('#' + pageId).removeClass('hidden'); 
-            if(pageId === 'usersPage') loadUsers(); // สั่งโหลดตารางตอนกดเปิด
+            if(pageId === 'usersPage') loadUsers(); 
         }
 
-        function toggleGPS(show) { if(show) { $('#gpsSettings').hide().removeClass('hidden').slideDown(300); } else { $('#gpsSettings').slideUp(300); } }
+        // --- แผนที่ Leaflet ---
+        function initMap() {
+            if (map) return; // สร้างครั้งเดียวพอ
+            // พิกัดเริ่มต้น ร.ร.เมืองสุราษฎร์ธานี โดยประมาณ
+            const startLat = 9.1411; const startLng = 99.3288;
+            map = L.map('map').setView([startLat, startLng], 17);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            marker = L.marker([startLat, startLng], {draggable: true}).addTo(map);
+            circle = L.circle([startLat, startLng], { radius: 50, color: '#4A148C', fillColor: '#7E57C2', fillOpacity: 0.3 }).addTo(map);
+
+            updateFormInputs(startLat, startLng);
+
+            // เมื่อลากหมุดเสร็จ ให้ขยับวงกลมตาม
+            marker.on('dragend', function(e) {
+                var pos = marker.getLatLng();
+                circle.setLatLng(pos);
+                updateFormInputs(pos.lat, pos.lng);
+            });
+
+            // เมื่อพิมพ์เปลี่ยนรัศมี วงกลมก็เปลี่ยนตาม
+            $('#c_radius').on('input', function() {
+                var r = $(this).val();
+                if(r) circle.setRadius(r);
+            });
+        }
+
+        function updateFormInputs(lat, lng) {
+            $('#c_lat').val(lat.toFixed(6)); $('#c_lng').val(lng.toFixed(6));
+        }
+
+        function toggleGPS(show) { 
+            if(show) { 
+                $('#gpsSettings').hide().removeClass('hidden').slideDown(300); 
+                setTimeout(() => { initMap(); map.invalidateSize(); }, 300); // ต้อง invalidateSize ตอนโชว์กล่อง
+            } else { $('#gpsSettings').slideUp(300); } 
+        }
+        
         function toggleOutTimes() { if($('#c_allowOut').is(':checked')) { $('#outTimesDiv').hide().removeClass('hidden').slideDown(300); } else { $('#outTimesDiv').slideUp(300); } }
 
         function getCurrentGPS() {
             if (navigator.geolocation) {
                 Swal.fire({ title: 'กำลังค้นหาตำแหน่ง...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                 navigator.geolocation.getCurrentPosition((position) => {
-                    $('#c_lat').val(position.coords.latitude); $('#c_lng').val(position.coords.longitude);
+                    const lat = position.coords.latitude; const lng = position.coords.longitude;
+                    updateFormInputs(lat, lng);
+                    if(map) { map.setView([lat, lng], 18); marker.setLatLng([lat, lng]); circle.setLatLng([lat, lng]); }
                     Swal.fire({ title: 'สำเร็จ', text: 'ดึงพิกัด GPS เรียบร้อย', icon: 'success', timer: 1500, showConfirmButton: false });
                 }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์', 'error'); }, { enableHighAccuracy: true });
             } else { Swal.fire('ผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบ GPS', 'error'); }
         }
 
+        // --- ล็อกอิน ---
         $('#adminLoginForm').on('submit', async function(e) {
             e.preventDefault(); Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
@@ -169,6 +233,7 @@
 
         function logoutAdmin() { sessionStorage.removeItem("adminName"); location.reload(); }
 
+        // --- สร้างกิจกรรม ---
         $('#createEventForm').on('submit', async function(e) {
             e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const payload = { action: 'createEvent', name: $('#c_evtName').val(), station: $('#c_stnName').val(), type: $('input[name="c_type"]:checked').val(), lat: $('#c_lat').val(), lng: $('#c_lng').val(), radius: $('#c_radius').val(), inStart: $('#c_inStart').val(), inEnd: $('#c_inEnd').val(), allowOut: $('#c_allowOut').is(':checked'), outStart: $('#c_outStart').val(), outEnd: $('#c_outEnd').val() };
@@ -190,7 +255,7 @@
                             <td class="px-4 py-4"><span class="bg-gray-100 border border-gray-200 text-gray-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.type}</span></td>
                             <td class="px-4 py-4"><span class="${e.status==='Open' ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200'} border px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.status}</span></td>
                             <td class="px-5 py-4 text-right flex gap-2 justify-end">
-                                <button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 text-xs shadow-sm"><i class="fas fa-exchange-alt mr-1"></i> เปิด/ปิด</button>
+                                <button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 text-xs shadow-sm"><i class="fas fa-exchange-alt"></i></button>
                                 <button onclick="deleteEvent('${e.id}')" class="bg-red-50 border border-red-100 text-red-500 font-bold w-8 h-8 rounded-lg hover:bg-red-100 text-xs shadow-sm"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>`).join(''));
@@ -205,7 +270,7 @@
         }
 
         async function deleteEvent(id) {
-            Swal.fire({ title: 'ลบกิจกรรม?', text: "ข้อมูลกิจกรรมจะหายไปจากระบบ", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#cbd5e1', confirmButtonText: 'ลบเลย!' }).then(async (result) => {
+            Swal.fire({ title: 'ลบกิจกรรม?', text: "ข้อมูลจะหายไปจากระบบ", icon: 'warning', showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#cbd5e1', confirmButtonText: 'ลบเลย!' }).then(async (result) => {
                 if (result.isConfirmed) {
                     Swal.fire({ title: 'กำลังลบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
                     try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'deleteEvent', eventId: id }) }); Swal.close(); fetchEvents(); } 
@@ -215,20 +280,89 @@
         }
 
         async function loadUsers() {
-            Swal.fire({ title: 'กำลังโหลดข้อมูลนักเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); const result = await res.json();
                 if(result.data.length === 0) { $('#usersTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 font-bold">ยังไม่มีนักเรียนลงทะเบียน</td></tr>`); } 
-                else { $('#usersTableBody').html(result.data.map(u => `<tr class="hover:bg-gray-50 transition-colors"><td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td><td class="px-4 py-3 font-black text-gray-900">${u.name}</td><td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class}</td><td class="px-4 py-3 text-sm font-bold">${u.studentNum}</td></tr>`).join('')); }
+                else { $('#usersTableBody').html(result.data.map(u => `<tr class="hover:bg-gray-50 transition-colors"><td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td><td class="px-4 py-3 font-black text-gray-900">${u.name}</td><td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class} เลขที่ ${u.studentNum}</td><td class="px-4 py-3 text-[10px] font-bold">${u.status === 'Active' ? '<span class="text-green-500 bg-green-50 px-2 py-1 rounded">ปกติ</span>' : '<span class="text-red-500 bg-red-50 px-2 py-1 rounded">พ้นสภาพ</span>'}</td></tr>`).join('')); }
                 Swal.close();
             } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดรายชื่อได้', 'error'); }
         }
 
+        // --- ระบบ Sync ข้อมูล (ดึงจากเว็บ ร.ร. แล้วเช็กทุกคน) ---
+        function cleanExcelRoomString(val) {
+            if(!val) return "ไม่ระบุ"; let str = val.toString().trim();
+            if(str.match(/^\d{4}-\d{2}-\d{2}/) || str.includes("GMT") || str.includes("Z")) { let d = new Date(str); if(!isNaN(d)) return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
+            if(!isNaN(str) && Number(str) > 40000) { let d = new Date(Math.round((Number(str) - 25569) * 86400 * 1000)); return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
+            let m = str.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/); if(m) return "ม." + m[1].replace(/\s/g, ''); return str;
+        }
+
+        async function syncAllUsers() {
+            Swal.fire({ title: 'กำลังโหลดข้อมูลจากเว็บโรงเรียน...', text: 'กระบวนการนี้อาจใช้เวลา 1-2 นาที กรุณาอย่าปิดหน้าจอ', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
+            try {
+                // 1. ดึงข้อมูล User จาก GAS ก่อน
+                const resGas = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); 
+                const gasUsers = (await resGas.json()).data;
+                if(gasUsers.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีคนในระบบให้ซิงก์', 'info');
+
+                // 2. ดึงข้อมูล Excel 
+                const webResponse = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent("http://www.mst.ac.th/index.php")}`);
+                const docHtml = new DOMParser().parseFromString(await webResponse.text(), "text/html");
+                const targetLink = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
+                if(!targetLink) throw new Error("ไม่พบลิงก์ฐานข้อมูล");
+                const fileId = targetLink.href.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
+                const resp = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`)}`);
+                const wb = XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: 'array' });
+                
+                // แปลง Excel เป็น Data แบนๆ เพื่อง่ายต่อการค้นหา
+                let allSchoolStudents = [];
+                wb.SheetNames.forEach((sn, i) => {
+                    if (wb.Workbook?.Sheets?.[i]?.Hidden) return;
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
+                    let currentRoom = "ไม่ระบุ"; 
+                    rows.forEach(r => {
+                        let roomCell = r.find(c => (typeof c === 'string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/)) || (c instanceof Date || (typeof c === 'number' && c > 40000)));
+                        if(roomCell) currentRoom = cleanExcelRoomString(roomCell);
+                        
+                        // หารหัส 5 หลักในบรรทัดนั้น (สมมุติว่ามันมีความยาว 5 หลักพอดี)
+                        let idIdx = r.findIndex(c => /^\d{5}$/.test(c.toString().trim()));
+                        if(idIdx !== -1) {
+                            let sNum = idIdx > 0 ? r[idIdx-1].toString().trim() : "-";
+                            allSchoolStudents.push({ id: r[idIdx].toString().trim(), num: sNum, class: currentRoom });
+                        }
+                    });
+                });
+
+                // 3. เปรียบเทียบ
+                let updatesToSend = [];
+                gasUsers.forEach(u => {
+                    // หาเฉพาะคนที่มีรหัสนักเรียน (ถ้าไม่มีข้ามไปก่อน)
+                    if(u.studentId && u.studentId !== "") {
+                        const foundInSchool = allSchoolStudents.find(s => s.id === u.studentId);
+                        if (foundInSchool) {
+                            // อัปเดตชั้น/เลขที่ให้เป็นปัจจุบัน
+                            updatesToSend.push({ uid: u.uid, status: "Active", className: foundInSchool.class, studentNum: foundInSchool.num });
+                        } else {
+                            // ไม่เจอใน ร.ร. = พ้นสภาพ
+                            updatesToSend.push({ uid: u.uid, status: "พ้นสภาพ", className: u.class, studentNum: u.studentNum });
+                        }
+                    }
+                });
+
+                // 4. ส่งกลับไปบันทึก
+                Swal.fire({ title: 'กำลังอัปเดตฐานข้อมูลสภาฯ...', text: `เตรียมอัปเดตข้อมูล ${updatesToSend.length} รายการ`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'bulkSyncUsers', updates: updatesToSend }) });
+                
+                Swal.fire('สำเร็จ', 'อัปเดตรายชื่อนักเรียนและสถานะให้เป็นปัจจุบันเรียบร้อย', 'success').then(()=> loadDashboard());
+            } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถซิงก์ข้อมูลได้: ' + err.message, 'error'); }
+        }
+
         async function downloadLogsCSV() {
-            Swal.fire({ title: 'กำลังสร้างไฟล์ CSV...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังสร้างไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); Swal.close();
-                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการเช็กอินในระบบ', 'info');
+                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติ', 'info');
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,Station,Action,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
                 result.data.forEach(r => { csvContent += `${new Date(r.Timestamp).toLocaleString('th-TH')},${r.EventName},${r.Station},${r.Action},${r.RefCode},${r.StudentName},${r.Class},${r.StudentNum},${r.StudentID},${r.ScannerName}\n`; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `MSTSC_Logs_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);

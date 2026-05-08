@@ -28,20 +28,34 @@
         .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* 3D Flip Card & เอฟเฟกต์แสง Hologram / ลายน้ำ */
         .perspective-1000 { perspective: 1000px; }
         .preserve-3d { transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
         .backface-hidden { backface-visibility: hidden; -webkit-backface-visibility: hidden; transform: translateZ(1px); }
         .rotate-y-180 { transform: rotateY(180deg) translateZ(1px); }
         .flipped .preserve-3d { transform: rotateY(180deg); }
         
+        .holo-card { position: relative; overflow: hidden; }
+        .holo-card::after {
+            content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.6) 50%, rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+            transform: rotate(30deg); animation: holoShine 5s infinite linear; pointer-events: none; z-index: 50; mix-blend-mode: overlay;
+        }
+        @keyframes holoShine { 0% { transform: translateX(-100%) rotate(30deg); } 20%, 100% { transform: translateX(100%) rotate(30deg); } }
+        
+        .watermark {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; opacity: 0.04; pointer-events: none; z-index: 0;
+        }
+
         .radio-btn:checked + div { background: linear-gradient(135deg, #4A148C, #7E57C2); border-color: #4A148C; color: white; box-shadow: 0 4px 15px rgba(74, 20, 140, 0.2); }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @supports (padding-bottom: env(safe-area-inset-bottom)) { .pb-safe { padding-bottom: calc(0.5rem + env(safe-area-inset-bottom)); } }
-
         #videoElement { width: 100%; height: 100%; object-fit: cover; }
         #canvasElement { display: none; }
+        
+        select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%234A148C%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E"); background-repeat: no-repeat; background-position: right 1rem top 50%; background-size: 0.65rem auto; }
     </style>
 </head>
 <body class="text-gray-800 antialiased flex justify-center">
@@ -74,12 +88,12 @@
                             <div class="absolute bottom-1 right-1 bg-[#06C755] w-7 h-7 rounded-full border-2 border-white flex items-center justify-center"><i class="fab fa-line text-white text-[11px]"></i></div>
                         </div>
                         <h2 class="text-2xl font-black text-gray-800 mb-1">สวัสดี, <span id="welcomeLineName" class="text-mstPurple"></span></h2>
-                        <p class="text-[11px] font-bold text-gray-500 mb-6 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">เชื่อมต่อกับรหัสนักเรียนของคุณเพื่อใช้งานระบบ</p>
+                        <p class="text-[11px] font-bold text-gray-500 mb-6 bg-gray-50 px-4 py-1.5 rounded-full border border-gray-100 shadow-sm">ผูกรหัสนักเรียนของคุณเพื่อเริ่มต้น</p>
                         <div class="space-y-4">
                             <input type="tel" id="searchStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 focus:bg-white focus:border-mstPurple outline-none text-center tracking-[0.1em] font-black text-xl text-gray-800 shadow-inner transition-all">
                             <button onclick="searchStudentFromWeb()" class="w-full bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-4 rounded-2xl font-bold shadow-lg hover:-translate-y-1 transition-transform text-lg"><i class="fas fa-search mr-2"></i> ค้นหาฐานข้อมูล</button>
                         </div>
-                        <button onclick="nav('registerManualPage')" class="mt-6 text-xs text-gray-400 font-medium underline decoration-dotted underline-offset-4">ไม่มีรหัสนักเรียน?</button>
+                        <button onclick="nav('registerManualPage')" class="mt-6 text-xs text-gray-400 font-medium underline decoration-dotted underline-offset-4">ไม่มีรหัสนักเรียน? (กรอกประวัติด้วยตนเอง)</button>
                     </div>
                 </div>
             </section>
@@ -87,12 +101,25 @@
             <section id="registerManualPage" class="hidden fade-in flex-1 flex flex-col">
                 <div class="flex-1 overflow-y-auto no-scrollbar p-4 flex flex-col justify-center">
                     <div class="glass-heavy rounded-[2.5rem] p-6 w-full shadow-xl">
-                        <h2 class="text-xl font-black text-gray-900 mb-6 text-center mt-2"><i class="fas fa-user-edit text-mstPurple mr-2"></i>สร้างบัตรแบบกรอกเอง</h2>
+                        <h2 class="text-xl font-black text-gray-900 mb-6 text-center mt-2"><i class="fas fa-user-edit text-mstPurple mr-2"></i>สร้างบัตรด้วยตนเอง</h2>
                         <form id="registerManualForm" class="space-y-4">
-                            <input type="text" id="regName" placeholder="ชื่อ-นามสกุล (มีคำนำหน้า) *" required class="w-full p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20 text-center">
-                            <div class="flex gap-3">
-                                <input type="text" id="regClass" placeholder="ชั้น (ม.6/5) *" required class="flex-1 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner text-center focus:bg-white focus:ring-2 focus:ring-mstPurple/20">
-                                <input type="number" id="regNum" placeholder="เลขที่ *" required class="w-1/3 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner text-center focus:bg-white focus:ring-2 focus:ring-mstPurple/20">
+                            <div class="flex gap-2">
+                                <select id="regPrefix" required class="w-1/3 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20 text-mstPurple">
+                                    <option value="" disabled selected>คำนำหน้า</option>
+                                    <option value="นาย">นาย</option><option value="นางสาว">นางสาว</option><option value="เด็กชาย">เด็กชาย</option><option value="เด็กหญิง">เด็กหญิง</option>
+                                </select>
+                                <input type="text" id="regName" placeholder="ชื่อ-นามสกุล *" required class="flex-1 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20">
+                            </div>
+                            <div class="flex gap-2">
+                                <select id="regLevel" required class="w-1/3 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20 text-mstPurple">
+                                    <option value="" disabled selected>ชั้น</option>
+                                    <option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option><option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option>
+                                </select>
+                                <select id="regRoom" required class="w-1/3 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20 text-mstPurple">
+                                    <option value="" disabled selected>ห้อง</option>
+                                    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
+                                </select>
+                                <input type="number" id="regNum" placeholder="เลขที่ *" required class="w-1/3 p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner focus:bg-white focus:ring-2 focus:ring-mstPurple/20 text-center">
                             </div>
                             <input type="tel" id="regPhone" placeholder="เบอร์โทรศัพท์ *" required class="w-full p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold shadow-inner text-center tracking-widest focus:bg-white focus:ring-2 focus:ring-mstPurple/20">
                             <input type="text" id="regStdId" placeholder="รหัสนักเรียน 5 หลัก (ถ้ามี)" class="w-full p-4 rounded-2xl bg-gray-50 outline-none text-sm font-bold placeholder-orange-300 shadow-inner text-center tracking-widest focus:bg-white focus:ring-2 focus:ring-mstPurple/20">
@@ -106,67 +133,65 @@
             </section>
 
             <section id="studentDashboard" class="hidden fade-in flex-1 flex flex-col p-4 overflow-y-auto no-scrollbar pb-safe">
+                
+                <div id="statusNotice" class="hidden bg-red-50 border border-red-200 rounded-2xl p-4 mb-4 flex items-center gap-3 shadow-sm">
+                    <div class="w-8 h-8 bg-red-100 text-red-500 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-user-slash"></i></div>
+                    <div class="flex-1"><p class="text-sm font-black text-red-800 tracking-tight">พ้นสภาพการเป็นนักเรียน</p><p class="text-[11px] text-red-600 mt-0.5 font-bold">ไม่สามารถใช้งานระบบเช็กอินกิจกรรมได้</p></div>
+                </div>
+
                 <div id="updateNotice" class="hidden bg-white/80 border border-orange-200 rounded-2xl p-4 mb-4 flex items-start gap-3 shadow-sm">
                     <div class="w-8 h-8 bg-orange-100 text-orange-500 rounded-full flex items-center justify-center shrink-0"><i class="fas fa-exclamation"></i></div>
-                    <div class="flex-1">
-                        <p class="text-sm font-bold text-orange-800">โปรดอัปเดตรหัสนักเรียน</p>
-                        <p class="text-[11px] text-orange-600 mb-2 mt-0.5">ระบุรหัส 5 หลักเพื่อการสะสมแต้มที่สมบูรณ์</p>
-                        <button onclick="nav('editProfilePage')" class="mt-1 bg-orange-500 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold shadow-sm">อัปเดตตอนนี้</button>
-                    </div>
+                    <div class="flex-1"><p class="text-sm font-bold text-orange-800">โปรดอัปเดตรหัสนักเรียน</p><button onclick="nav('editProfilePage')" class="mt-1 bg-orange-500 text-white text-[10px] px-3 py-1.5 rounded-lg font-bold shadow-sm">อัปเดตตอนนี้</button></div>
                 </div>
 
                 <div class="perspective-1000 w-full mb-6 cursor-pointer" onclick="this.classList.toggle('flipped')">
-                    <div class="preserve-3d relative w-full h-[420px] rounded-[2.5rem] shadow-2xl">
+                    <div class="preserve-3d relative w-full h-[420px] rounded-[2.5rem] shadow-2xl holo-card">
                         
                         <div class="absolute inset-0 backface-hidden bg-white border border-gray-100 rounded-[2.5rem] overflow-hidden flex flex-col items-center justify-center p-6 z-10">
+                            <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="watermark">
+                            
                             <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-50 to-transparent -z-10"></div>
-                            <p class="absolute top-4 right-5 text-gray-300 text-[10px] font-bold"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
+                            <p class="absolute top-4 right-5 text-gray-400 text-[10px] font-bold bg-white/50 px-2 py-1 rounded-full"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
                             
-                            <img id="profileImage" src="" class="w-28 h-28 rounded-full border-4 border-white shadow-xl object-cover bg-gray-100 relative z-20">
-                            <h2 id="cardName" class="text-2xl font-black text-mstPurple mt-5 leading-tight text-center px-4 relative z-20 w-full truncate"></h2>
+                            <img id="profileImage" src="" class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover bg-gray-100 relative z-20">
+                            <h2 id="cardName" class="text-2xl font-black text-gray-900 mt-5 leading-tight text-center px-4 relative z-20 w-full truncate drop-shadow-sm"></h2>
                             
-                            <div class="bg-gray-50 border border-gray-100 rounded-2xl px-6 py-4 mt-5 flex gap-5 text-center shadow-inner relative z-20 w-full justify-center">
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">รหัส</p><p id="cardStdId" class="font-black text-gray-800 font-mono text-lg"></p></div>
+                            <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl px-6 py-4 mt-5 flex gap-5 text-center shadow-sm relative z-20 w-full justify-center">
+                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">รหัส</p><p id="cardStdId" class="font-black text-mstPurple font-mono text-lg"></p></div>
                                 <div class="w-px bg-gray-200"></div>
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">ชั้น</p><p id="cardClass" class="font-black text-gray-800 text-lg"></p></div>
+                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">ชั้น</p><p id="cardClass" class="font-black text-mstPurple text-lg"></p></div>
                                 <div class="w-px bg-gray-200"></div>
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">เลขที่</p><p id="cardNum" class="font-black text-gray-800 text-lg"></p></div>
+                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">เลขที่</p><p id="cardNum" class="font-black text-mstPurple text-lg"></p></div>
                             </div>
                         </div>
 
                         <div class="absolute inset-0 backface-hidden rotate-y-180 bg-white border border-gray-100 rounded-[2.5rem] flex flex-col items-center justify-center p-6 z-0 shadow-inner">
-                            <p class="absolute top-4 right-5 text-gray-300 text-[10px] font-bold"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
-                            <h3 class="text-[10px] font-black text-gray-400 mb-4 tracking-[0.2em] uppercase"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
+                            <img src="https://i.ibb.co/GQYCbXrc/logo.webp" class="watermark">
+                            <p class="absolute top-4 right-5 text-gray-400 text-[10px] font-bold bg-white/50 px-2 py-1 rounded-full relative z-20"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
                             
-                            <div class="bg-gray-50 p-2 rounded-xl border border-gray-100 shadow-sm w-full flex justify-center mb-6">
-                                <svg id="barcode" class="w-full max-h-16"></svg>
+                            <div class="relative z-20 w-full flex flex-col items-center">
+                                <h3 class="text-[10px] font-black text-mstPurple mb-3 tracking-[0.2em] uppercase bg-purple-50 px-3 py-1 rounded-lg"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
+                                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm w-full flex justify-center mb-5"><svg id="barcode" class="w-full max-h-14"></svg></div>
+                                <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-md relative group hover:scale-105 transition-transform" onclick="event.stopPropagation(); expandQR();">
+                                    <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto"></div>
+                                    <div class="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-2xl drop-shadow-md"></i></div>
+                                </div>
+                                <p id="cardRef" class="text-[10px] text-gray-500 mt-4 font-mono font-bold tracking-widest bg-gray-50 px-4 py-1.5 rounded-xl border border-gray-100"></p>
                             </div>
-                            
-                            <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-md relative group hover:scale-105 transition-transform mx-auto" onclick="event.stopPropagation(); expandQR();">
-                                <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto"></div>
-                                <div class="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-2xl drop-shadow-md"></i></div>
-                            </div>
-                            <p id="cardRef" class="text-[9px] text-gray-400 mt-4 font-mono tracking-widest bg-gray-50 px-3 py-1 rounded-lg border border-gray-100"></p>
                         </div>
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-3 pb-6">
+                <div class="grid grid-cols-2 gap-3 pb-6" id="studentActionMenu">
                     <button onclick="openSelfCheckIn()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2 hover:-translate-y-1"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-map-marker-alt text-xl text-red-500"></i></div><span class="text-[10px] uppercase font-black">เช็กอินด้วยตนเอง</span></button>
                     <button onclick="loadMyHistory()" class="bg-white hover:bg-purple-50 text-mstPurple font-bold py-4 rounded-2xl border border-gray-100 shadow-sm transition-colors flex flex-col items-center gap-2 hover:-translate-y-1"><div class="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center"><i class="fas fa-history text-xl text-mstYellow"></i></div><span class="text-[10px] uppercase font-black">ประวัติกิจกรรม</span></button>
-                </div>
-
-                <div class="flex justify-center items-center gap-4 pb-8">
-                    <button onclick="checkAdminAuth()" class="text-[11px] text-gray-500 font-bold bg-white/80 px-5 py-2.5 rounded-full border border-gray-200 shadow-sm hover:text-mstPurple transition-colors flex items-center gap-1.5">
-                        <i class="fas fa-shield-alt"></i> สำหรับสภานักเรียน
-                    </button>
                 </div>
             </section>
 
             <section id="selfCheckInPage" class="hidden fade-in flex-1 flex flex-col bg-[#f3e5f5] absolute inset-0 z-50">
                 <div class="bg-white px-5 py-4 flex justify-between items-center shadow-sm shrink-0">
                     <h3 class="text-xl font-black text-mstPurple flex items-center gap-2"><i class="fas fa-map-marker-alt text-red-500"></i> เช็กอิน GPS</h3>
-                    <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center"><i class="fas fa-times"></i></button>
+                    <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center hover:bg-gray-100"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-safe" id="selfCheckInList"></div>
             </section>
@@ -174,7 +199,7 @@
             <section id="historyPage" class="hidden fade-in flex-1 flex flex-col bg-[#f3e5f5] absolute inset-0 z-50">
                 <div class="bg-white px-5 py-4 flex justify-between items-center shadow-sm shrink-0">
                     <h3 class="text-xl font-black text-mstPurple flex items-center gap-2"><i class="fas fa-history text-mstYellow"></i> ประวัติของฉัน</h3>
-                    <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center"><i class="fas fa-times"></i></button>
+                    <button onclick="nav('studentDashboard')" class="text-gray-400 bg-gray-50 w-8 h-8 rounded-full flex justify-center items-center hover:bg-gray-100"><i class="fas fa-times"></i></button>
                 </div>
                 <div class="flex-1 overflow-y-auto no-scrollbar p-4 space-y-3 pb-safe" id="historyList"></div>
             </section>
@@ -182,48 +207,25 @@
             <section id="editProfilePage" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-50 bg-[#f3e5f5]">
                 <div class="flex-1 flex flex-col justify-center items-center p-6">
                     <div class="glass-heavy p-8 rounded-[2.5rem] w-full max-w-sm shadow-xl text-center border border-white">
-                        <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-5 border border-orange-100"><i class="fas fa-id-badge text-3xl"></i></div>
+                        <div class="w-16 h-16 bg-orange-50 text-orange-500 rounded-full flex items-center justify-center mx-auto mb-5 border border-orange-100"><i class="fas fa-sync-alt text-3xl"></i></div>
                         <h3 class="text-xl font-black text-gray-900 mb-2">อัปเดตรหัสนักเรียน</h3>
+                        <p class="text-[10px] text-gray-500 mb-6 font-bold bg-white p-2 rounded-lg border border-gray-100 shadow-sm">ระบบจะดึงข้อมูล ชื่อ/ชั้น/ห้อง จากโรงเรียนใหม่<br>เพื่อให้ตรงกับรหัสที่คุณกรอก</p>
                         <input type="tel" id="updateStdId" placeholder="รหัส 5 หลัก" class="w-full p-4 rounded-2xl bg-white text-center font-black tracking-[0.2em] text-xl outline-none mb-6 shadow-sm border border-gray-200 focus:border-mstPurple" maxlength="5">
                     </div>
                 </div>
                 <div class="shrink-0 p-4 pb-safe glass border-t border-white flex gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.05)] rounded-t-[2rem]">
                     <button onclick="nav('studentDashboard')" class="w-1/3 bg-white text-gray-500 font-bold py-4 rounded-2xl shadow-sm border border-gray-100">ยกเลิก</button>
-                    <button onclick="saveNewStdId()" class="w-2/3 bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-4 rounded-2xl font-black shadow-lg">บันทึกรหัส</button>
-                </div>
-            </section>
-
-            <section id="foundStudentPage" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-50 bg-gradient-to-b from-[#f3e5f5] to-[#fffde7]">
-                <div class="flex-1 overflow-y-auto no-scrollbar p-6 pt-12 pb-6 text-center flex flex-col justify-center items-center">
-                    <div class="w-20 h-20 bg-white text-[#06C755] rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-xl border-4 border-green-50"><i class="fas fa-check text-4xl"></i></div>
-                    <h2 class="text-2xl font-black text-mstPurple mb-2 tracking-tight">พบข้อมูลของคุณ</h2>
-                    
-                    <div class="glass-heavy rounded-[2rem] p-6 text-left space-y-4 mb-6 shadow-xl border border-white w-full max-w-sm mt-4">
-                        <div class="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl shadow-inner border border-gray-100"><div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center text-mstPurple"><i class="fas fa-id-card text-xl"></i></div><div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest mb-0.5">รหัสนักเรียน</p><p class="text-xl font-black text-gray-800 font-mono tracking-wider" id="fs_id">-</p></div></div>
-                        <div><p class="text-[9px] text-gray-400 font-bold uppercase pl-2 mb-1">ชื่อ-นามสกุล</p><p class="text-sm font-bold text-gray-800 bg-white/80 p-4 rounded-2xl shadow-sm border border-gray-100 text-center" id="fs_name">-</p></div>
-                        <div class="flex gap-3">
-                            <div class="flex-1"><p class="text-[9px] text-gray-400 font-bold uppercase pl-2 mb-1">ชั้น</p><p class="text-sm font-bold text-gray-800 bg-white/80 p-4 rounded-2xl shadow-sm border border-gray-100 text-center" id="fs_class">-</p></div>
-                            <div class="flex-1"><p class="text-[9px] text-gray-400 font-bold uppercase pl-2 mb-1">เลขที่</p><p class="text-sm font-bold text-gray-800 bg-white/80 p-4 rounded-2xl shadow-sm border border-gray-100 text-center" id="fs_num">-</p></div>
-                        </div>
-                    </div>
-                    <div class="text-left glass rounded-[2rem] p-5 border border-white shadow-sm w-full max-w-sm">
-                        <label class="block text-[10px] font-bold text-mstPurple uppercase tracking-widest mb-2 ml-1">เบอร์โทรศัพท์ (จำเป็น)</label>
-                        <input type="tel" id="fs_phone" required class="w-full p-4 rounded-2xl bg-white/80 outline-none text-center font-black text-xl shadow-inner tracking-wider" placeholder="08X-XXX-XXXX">
-                    </div>
-                </div>
-                <div class="shrink-0 p-4 pb-safe glass border-t border-white flex gap-3 shadow-[0_-15px_30px_rgba(0,0,0,0.05)] rounded-t-[2.5rem]">
-                    <button onclick="nav('registerSearchPage')" class="w-1/3 bg-gray-50 text-gray-500 py-4 rounded-2xl font-bold shadow-sm border border-gray-100">ยกเลิก</button>
-                    <button onclick="confirmLinkStudent()" class="w-2/3 bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-4 rounded-2xl font-black shadow-lg text-lg">ผูกบัญชีเลย!</button>
+                    <button onclick="saveNewStdId()" class="w-2/3 bg-gradient-to-r from-mstPurple to-[#7E57C2] text-white py-4 rounded-2xl font-black shadow-lg">ดึงข้อมูลและบันทึก</button>
                 </div>
             </section>
 
             <section id="verifyPage" class="hidden fade-in flex-1 flex flex-col absolute inset-0 z-50 bg-[#f3e5f5]">
                 <div class="flex-1 flex flex-col justify-center p-4">
                     <div class="glass-heavy p-8 rounded-[2.5rem] w-full max-w-sm mx-auto shadow-2xl border border-white">
-                        <div class="text-center mb-6 mt-2"><div class="w-16 h-16 bg-purple-50 text-mstPurple rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"><i class="fas fa-shield-alt text-2xl"></i></div><h2 class="text-xl font-black text-gray-900">เข้าสู่ระบบสตาฟ</h2></div>
+                        <div class="text-center mb-6 mt-2"><div class="w-16 h-16 bg-purple-50 text-mstPurple rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner border border-purple-100"><i class="fas fa-shield-alt text-2xl"></i></div><h2 class="text-xl font-black text-gray-900">เข้าสู่ระบบสตาฟ</h2></div>
                         <form id="verifyForm" class="space-y-4">
-                            <input type="tel" id="v_std_id" placeholder="รหัสนักเรียน 5 หลัก" required class="w-full p-4 rounded-2xl bg-gray-50 text-center tracking-[0.2em] font-bold outline-none shadow-inner" maxlength="5">
-                            <input type="tel" id="v_id_card" placeholder="เลขบัตรประชาชน 13 หลัก" required class="w-full p-4 rounded-2xl bg-gray-50 text-center tracking-[0.1em] font-bold outline-none shadow-inner" maxlength="13">
+                            <input type="tel" id="v_std_id" placeholder="รหัสนักเรียน 5 หลัก" required class="w-full p-4 rounded-2xl bg-white outline-none font-bold text-center tracking-[0.2em] shadow-sm border border-gray-100 focus:border-mstPurple" maxlength="5">
+                            <input type="tel" id="v_id_card" placeholder="เลข ปชช. 13 หลัก" required class="w-full p-4 rounded-2xl bg-white outline-none font-bold text-center tracking-[0.1em] shadow-sm border border-gray-100 focus:border-mstPurple" maxlength="13">
                         </form>
                     </div>
                 </div>
@@ -244,18 +246,18 @@
 
                     <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-5 shrink-0">
                         <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2 ml-2">เลือกกิจกรรมที่เปิดอยู่</label>
-                        <select id="eventSelect" class="w-full p-4 rounded-2xl bg-gray-50 text-mstPurple font-bold mb-5 outline-none text-center border-none shadow-inner appearance-none">
+                        <select id="eventSelect" class="w-full p-4 rounded-2xl bg-white text-mstPurple font-bold mb-5 outline-none text-center border border-gray-100 shadow-sm appearance-none focus:border-mstPurple">
                             <option value="">-- กำลังโหลดกิจกรรม --</option>
                         </select>
 
                         <div class="flex gap-2">
                             <label class="flex-1 cursor-pointer">
                                 <input type="radio" name="scanType" value="IN" checked class="radio-btn hidden">
-                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
+                                <div class="bg-white border border-gray-100 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-sm text-sm uppercase"><i class="fas fa-sign-in-alt text-lg block mb-1"></i> IN (เข้า)</div>
                             </label>
                             <label class="flex-1 cursor-pointer" id="outRadioContainer">
                                 <input type="radio" name="scanType" value="OUT" class="radio-btn hidden">
-                                <div class="bg-gray-50 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-inner text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
+                                <div class="bg-white border border-gray-100 text-gray-400 rounded-2xl p-4 text-center font-black transition-all shadow-sm text-sm uppercase"><i class="fas fa-sign-out-alt text-lg block mb-1"></i> OUT (ออก)</div>
                             </label>
                         </div>
                     </div>
@@ -269,7 +271,7 @@
                     <div class="glass-heavy rounded-[2.5rem] p-6 shadow-xl border border-white mb-6 shrink-0 mt-auto">
                         <label class="block text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 text-center"><i class="fas fa-keyboard"></i> คีย์รหัสด้วยตนเอง (Manual)</label>
                         <div class="flex gap-2">
-                            <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-gray-50 outline-none font-black text-center tracking-[0.2em] text-xl shadow-inner border-none transition-all">
+                            <input type="tel" id="manualStdId" placeholder="รหัส 5 หลัก" maxlength="5" class="w-full p-4 rounded-2xl bg-white outline-none font-black text-center tracking-[0.2em] text-xl shadow-sm border border-gray-100 focus:border-mstPurple transition-all">
                             <button onclick="recordManualScan()" class="bg-gray-800 text-mstYellow px-6 rounded-2xl font-bold shadow-lg"><i class="fas fa-paper-plane text-xl"></i></button>
                         </div>
                     </div>
@@ -278,17 +280,11 @@
 
             <section id="scannerOverlay" class="hidden fixed inset-0 z-[200] bg-black flex-col fade-in">
                 <div class="p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent absolute top-0 w-full z-20 pt-safe">
-                    <div class="text-white">
-                        <h3 class="font-black text-lg text-mstYellow tracking-wider"><i class="fas fa-qrcode"></i> SCANNER</h3>
-                        <p class="text-[10px] opacity-80">หันกล้องไปที่ QR Code</p>
-                    </div>
+                    <div class="text-white"><h3 class="font-black text-lg text-mstYellow tracking-wider"><i class="fas fa-qrcode"></i> SCANNER</h3><p class="text-[10px] opacity-80">หันกล้องไปที่ QR Code ของเพื่อน</p></div>
                     <button onclick="stopScan()" class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md hover:bg-red-500"><i class="fas fa-times"></i></button>
                 </div>
-                
                 <div class="flex-1 relative overflow-hidden bg-black flex items-center justify-center">
-                    <video id="videoElement" playsinline></video>
-                    <canvas id="canvasElement"></canvas>
-                    
+                    <video id="videoElement" playsinline></video><canvas id="canvasElement"></canvas>
                     <div class="absolute inset-0 pointer-events-none flex items-center justify-center z-10">
                         <div class="w-64 h-64 border-[3px] border-mstYellow rounded-[2rem] shadow-[0_0_0_9999px_rgba(0,0,0,0.6)] relative">
                             <div class="absolute -top-1 -left-1 w-6 h-6 border-t-[5px] border-l-[5px] border-mstYellow rounded-tl-[2rem]"></div>
@@ -303,6 +299,12 @@
             <style>@keyframes scanLine { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }</style>
             
         </div>
+        
+        <div class="fixed bottom-6 left-0 w-full flex justify-center items-center gap-4 z-30" id="mainFooterButtons">
+            <button onclick="checkAdminAuth()" class="text-[11px] text-gray-500 font-bold bg-white/80 backdrop-blur-sm px-5 py-2.5 rounded-full border border-gray-200 shadow-sm hover:text-mstPurple transition-colors flex items-center gap-1.5"><i class="fas fa-shield-alt"></i> สำหรับสตาฟสภาฯ</button>
+            <button onclick="liff.logout(); window.location.reload();" class="text-[11px] text-red-400 font-bold bg-white/80 backdrop-blur-sm px-5 py-2.5 rounded-full border border-red-100 shadow-sm hover:text-red-600 transition-colors flex items-center gap-1.5"><i class="fas fa-sign-out-alt"></i> ออกจากระบบ</button>
+        </div>
+        
     </main>
 
     <script>
@@ -312,17 +314,15 @@
         let liffProfile = null; let userData = null; let adminName = ""; let qrCodeObj = null;
         let tempFoundStudent = null; let activeEvents = []; let myHistoryCache = [];
         
-        // ตัวแปรสำหรับกล้องใหม่ (jsQR)
         let video = document.getElementById("videoElement");
         let canvasElement = document.getElementById("canvasElement");
         let canvas = canvasElement.getContext("2d");
-        let isScanning = false;
-        let scanStream = null;
+        let isScanning = false; let scanStream = null;
 
         async function main() {
             try {
                 await liff.init({ liffId: LIFF_ID });
-                if (!liff.isLoggedIn()) { hideLoader(); nav('loginPage'); } 
+                if (!liff.isLoggedIn()) { hideLoader(); nav('loginPage'); $('#mainFooterButtons').addClass('hidden'); } 
                 else { liffProfile = await liff.getProfile(); $('#profileImage').attr('src', liffProfile.pictureUrl); checkUserStatus(); }
             } catch(e) { hideLoader(); Swal.fire('Error', 'LINE LIFF Init Failed', 'error'); }
         }
@@ -333,16 +333,26 @@
         
         function nav(pageId) { 
             $('#contentArea > section').addClass('hidden'); $('#' + pageId).removeClass('hidden'); 
-            if(pageId === 'studentDashboard' || pageId === 'adminDashboard') { $('#mainHeader').removeClass('hidden'); } 
-            else { $('#mainHeader').addClass('hidden'); }
+            
+            // ซ่อนปุ่มล่างสุดถ้าไม่ได้อยู่หน้าแรก
+            if(pageId === 'studentDashboard') { 
+                $('#mainHeader').removeClass('hidden'); 
+                $('#mainFooterButtons').removeClass('hidden'); 
+            } else { 
+                $('#mainHeader').addClass('hidden'); 
+                $('#mainFooterButtons').addClass('hidden'); 
+            }
         }
 
         async function checkUserStatus() {
             try {
                 const res = await fetch(`${GAS_URL}?action=getUser&uid=${liffProfile.userId}`, { redirect: "follow" });
                 const data = await res.json();
-                if (data.status === 'found') { userData = data.user; renderCard(); nav('studentDashboard'); } 
-                else { 
+                if (data.status === 'found') { 
+                    userData = data.user; 
+                    renderCard(); 
+                    nav('studentDashboard'); 
+                } else { 
                     $('#welcomeLinePic').attr('src', liffProfile.pictureUrl);
                     let dName = liffProfile.displayName; if(dName.length > 12) dName = dName.substring(0, 12) + "...";
                     $('#welcomeLineName').text(dName); nav('registerSearchPage'); 
@@ -358,37 +368,41 @@
             let m = str.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/); if(m) return "ม." + m[1].replace(/\s/g, ''); return str;
         }
 
+        async function fetchStudentFromExcel(searchId) {
+            const webResponse = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent("http://www.mst.ac.th/index.php")}`);
+            const docHtml = new DOMParser().parseFromString(await webResponse.text(), "text/html");
+            const targetLink = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
+            if(!targetLink) throw new Error("ไม่พบลิงก์ฐานข้อมูลเว็บ ร.ร.");
+            const fileId = targetLink.href.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
+            
+            const resp = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`)}`);
+            const wb = XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: 'array' });
+            let foundStudent = null;
+            
+            wb.SheetNames.forEach((sn, i) => {
+                if (foundStudent || wb.Workbook?.Sheets?.[i]?.Hidden) return;
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
+                let currentRoom = "ไม่ระบุ"; 
+                rows.forEach(r => {
+                    let roomCell = r.find(c => (typeof c === 'string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/)) || (c instanceof Date || (typeof c === 'number' && c > 40000)));
+                    if(roomCell) currentRoom = cleanExcelRoomString(roomCell);
+                    let idx = r.findIndex(c => c.toString().trim() === searchId);
+                    if (idx !== -1) {
+                        let sNum = idx > 0 ? r[idx-1].toString().trim() : "-";
+                        let fn = (r.length > idx+4 && r[idx+4]) ? r[idx+4].toString().trim() : `${r[idx+1]||""}${r[idx+2]||""} ${r[idx+3]||""}`.trim();
+                        foundStudent = { id: searchId, number: sNum, name: fn.replace(/['"]/g, '').replace(/^(นาย|นางสาว|นาง|น\.ส\.|เด็กชาย|เด็กหญิง|ด\.ช\.|ด\.ญ\.)\s+/g, '$1').trim(), className: currentRoom };
+                    }
+                });
+            });
+            return foundStudent;
+        }
+
         async function searchStudentFromWeb() {
             const searchId = document.getElementById("searchStdId").value.trim();
             if(!/^\d{5}$/.test(searchId)) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัสนักเรียน 5 หลัก', 'warning');
             setLoader('เชื่อมต่อฐานข้อมูลโรงเรียน...');
             try {
-                const webResponse = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent("http://www.mst.ac.th/index.php")}`);
-                const docHtml = new DOMParser().parseFromString(await webResponse.text(), "text/html");
-                const targetLink = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
-                if(!targetLink) throw new Error("ไม่พบลิงก์ฐานข้อมูล");
-                const fileId = targetLink.href.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
-                
-                const resp = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`)}`);
-                const wb = XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: 'array' });
-                let foundStudent = null;
-                
-                wb.SheetNames.forEach((sn, i) => {
-                    if (foundStudent || wb.Workbook?.Sheets?.[i]?.Hidden) return;
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
-                    let currentRoom = "ไม่ระบุ"; 
-                    rows.forEach(r => {
-                        let roomCell = r.find(c => (typeof c === 'string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/)) || (c instanceof Date || (typeof c === 'number' && c > 40000)));
-                        if(roomCell) currentRoom = cleanExcelRoomString(roomCell);
-                        let idx = r.findIndex(c => c.toString().trim() === searchId);
-                        if (idx !== -1) {
-                            let sNum = idx > 0 ? r[idx-1].toString().trim() : "-";
-                            let fn = (r.length > idx+4 && r[idx+4]) ? r[idx+4].toString().trim() : `${r[idx+1]||""}${r[idx+2]||""} ${r[idx+3]||""}`.trim();
-                            foundStudent = { id: searchId, number: sNum, name: fn.replace(/['"]/g, '').replace(/^(นาย|นางสาว|นาง|น\.ส\.|เด็กชาย|เด็กหญิง|ด\.ช\.|ด\.ญ\.)\s+/g, '$1').trim(), className: currentRoom };
-                        }
-                    });
-                });
-                
+                let foundStudent = await fetchStudentFromExcel(searchId);
                 hideLoader();
                 if(foundStudent) { tempFoundStudent = foundStudent; $('#fs_id').text(foundStudent.id); $('#fs_name').text(foundStudent.name); $('#fs_class').text(foundStudent.className); $('#fs_num').text(foundStudent.number); nav('foundStudentPage'); } 
                 else { Swal.fire('ไม่พบข้อมูล', 'โปรดตรวจสอบรหัสอีกครั้ง', 'error'); }
@@ -398,19 +412,37 @@
         async function confirmLinkStudent() {
             const phoneNum = $('#fs_phone').val().trim();
             if(!phoneNum) return Swal.fire('แจ้งเตือน', 'กรุณากรอกเบอร์โทรศัพท์', 'warning');
-            $('#foundStudentPage').addClass('hidden'); setLoader('กำลังสร้างบัตรดิจิทัล...');
+            setLoader('กำลังสร้างบัตรดิจิทัล...');
             try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'registerUser', uid: liffProfile.userId, name: tempFoundStudent.name, className: tempFoundStudent.className, phone: phoneNum, studentId: tempFoundStudent.id, studentNum: tempFoundStudent.number }) }); checkUserStatus(); } 
             catch(e) { hideLoader(); Swal.fire('Error','บันทึกไม่สำเร็จ','error'); }
         }
 
+        // ระบบกรอกมือแบบใหม่ (ต่อ String ให้ถูกต้อง)
         $('#registerManualForm').on('submit', async function(e) {
             e.preventDefault(); setLoader('กำลังสร้างบัตร...');
-            try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'registerUser', uid: liffProfile.userId, name: $('#regName').val(), className: $('#regClass').val(), phone: $('#regPhone').val(), studentId: $('#regStdId').val(), studentNum: $('#regNum').val() }) }); checkUserStatus(); } 
+            const pfx = $('#regPrefix').val() || "";
+            const nm = $('#regName').val().trim();
+            const fullName = pfx + nm;
+            
+            const lv = $('#regLevel').val() || "";
+            const rm = $('#regRoom').val() || "";
+            const fullClass = lv && rm ? `${lv}/${rm}` : "";
+
+            try { await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'registerUser', uid: liffProfile.userId, name: fullName, className: fullClass, phone: $('#regPhone').val(), studentId: $('#regStdId').val(), studentNum: $('#regNum').val() }) }); checkUserStatus(); } 
             catch (error) { hideLoader(); Swal.fire('Error', 'บันทึกไม่สำเร็จ', 'error'); } 
         });
 
         function renderCard() {
-            $('#cardName').text(userData.name); $('#cardClass').text(`ม.${userData.className.replace('ม.', '')}`); $('#cardNum').text(userData.studentNum);
+            // เช็กสถานะพ้นสภาพ
+            if(userData.userStatus === "พ้นสภาพ") {
+                $('#statusNotice').removeClass('hidden');
+                $('#studentActionMenu').addClass('hidden'); // ซ่อนปุ่มเช็กอิน
+            } else {
+                $('#statusNotice').addClass('hidden');
+                $('#studentActionMenu').removeClass('hidden');
+            }
+
+            $('#cardName').text(userData.name); $('#cardClass').text(`${userData.className.replace('ม.', '')}`); $('#cardNum').text(userData.studentNum);
             if(!userData.studentId || userData.studentId === "") { $('#cardStdId').text('NO ID'); $('#updateNotice').removeClass('hidden'); } 
             else { $('#cardStdId').text(userData.studentId); $('#updateNotice').addClass('hidden'); }
             
@@ -424,20 +456,45 @@
         
         window.expandQR = function() {
             Swal.fire({
-                html: `<div class="flex flex-col items-center justify-center p-2"><h3 class="text-xl font-black text-mstPurple mb-4 tracking-tight">สแกนเข้ากิจกรรม</h3><div id="swal-qr" class="bg-white p-4 rounded-3xl shadow-inner border border-gray-100 flex items-center justify-center mx-auto w-56 h-56"></div><p class="mt-5 text-[10px] font-mono font-bold text-gray-500 tracking-widest bg-gray-100 px-4 py-2 rounded-xl border border-gray-200">${userData.refCode}</p></div>`,
+                html: `<div class="flex flex-col items-center justify-center p-2"><h3 class="text-xl font-black text-mstPurple mb-4 tracking-tight">สแกนเข้ากิจกรรม</h3><div id="swal-qr" class="bg-white p-4 rounded-3xl shadow-inner border border-gray-100 flex items-center justify-center mx-auto w-56 h-56"></div><p class="mt-5 text-[10px] font-mono font-bold text-gray-500 tracking-widest bg-gray-100 px-4 py-2 rounded-xl border border-gray-200 shadow-sm">${userData.refCode}</p></div>`,
                 showConfirmButton: false, showCloseButton: true, customClass: { popup: 'rounded-[2.5rem]' },
                 didOpen: () => { new QRCode(document.getElementById("swal-qr"), { text: userData.refCode, width: 200, height: 200, colorDark: "#4A148C", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.H }); }
             });
         }
 
+        // --- ระบบดึงข้อมูลซ้ำ (Late Binding) เมื่อ นร. อัปเดตรหัสทีหลัง ---
         async function saveNewStdId() {
-            const newId = $('#updateStdId').val(); if(!newId) return;
-            setLoader('บันทึก...');
-            await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'updateProfile', uid: liffProfile.userId, studentId: newId }) });
-            userData.studentId = newId; renderCard(); nav('studentDashboard'); hideLoader(); Swal.fire('สำเร็จ', 'อัปเดตข้อมูลแล้ว', 'success');
+            const newId = $('#updateStdId').val().trim(); 
+            if(newId.length !== 5) return Swal.fire('แจ้งเตือน', 'กรุณากรอกรหัส 5 หลัก', 'warning');
+            
+            setLoader('ดึงข้อมูลจากโรงเรียน...');
+            try {
+                let foundStudent = await fetchStudentFromExcel(newId);
+                hideLoader();
+
+                if(foundStudent) {
+                    Swal.fire({
+                        title: 'พบข้อมูลในระบบ',
+                        html: `<div class="bg-purple-50 p-4 rounded-2xl text-left text-sm mb-4 border border-purple-100"><p><b>ชื่อ:</b> ${foundStudent.name}</p><p><b>ชั้น:</b> ${foundStudent.className} <b>เลขที่:</b> ${foundStudent.number}</p></div><p class="text-xs text-red-500 font-bold">ข้อมูลเก่าของคุณจะถูกอัปเดตให้ตรงกับระบบของโรงเรียน ยืนยันหรือไม่?</p>`,
+                        icon: 'info', showCancelButton: true, confirmButtonText: 'ยืนยันการอัปเดต', cancelButtonText: 'ยกเลิก', confirmButtonColor: '#4A148C'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            setLoader('บันทึก...');
+                            await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'updateProfile', uid: liffProfile.userId, studentId: foundStudent.id, name: foundStudent.name, className: foundStudent.className, studentNum: foundStudent.number }) });
+                            userData.studentId = foundStudent.id; userData.name = foundStudent.name; userData.className = foundStudent.className; userData.studentNum = foundStudent.number;
+                            renderCard(); nav('studentDashboard'); hideLoader(); Swal.fire('สำเร็จ', 'อัปเดตข้อมูลตรงกับโรงเรียนแล้ว', 'success');
+                        }
+                    });
+                } else {
+                    Swal.fire('ไม่พบข้อมูล', 'รหัสนี้ไม่มีในฐานข้อมูลโรงเรียน (บันทึกเฉพาะรหัส)', 'warning').then(async () => {
+                        setLoader('บันทึกรหัส...');
+                        await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'updateProfile', uid: liffProfile.userId, studentId: newId }) });
+                        userData.studentId = newId; renderCard(); nav('studentDashboard'); hideLoader(); Swal.fire('สำเร็จ', 'อัปเดตรหัสเบื้องต้นแล้ว', 'success');
+                    });
+                }
+            } catch(e) { hideLoader(); Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเว็บ ร.ร. ได้', 'error'); }
         }
 
-        // --- ระบบดูประวัติ ---
         async function loadMyHistory() {
             setLoader('กำลังโหลดประวัติ...');
             try {
@@ -450,7 +507,7 @@
                 else {
                     container.innerHTML = result.data.map(log => {
                         const isOut = log.Action === 'OUT'; const colorClass = isOut ? 'text-red-500 bg-red-50 border-red-100' : 'text-green-500 bg-green-50 border-green-100'; const icon = isOut ? 'fa-sign-out-alt' : 'fa-sign-in-alt';
-                        return `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow"><div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${colorClass}"><i class="fas ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><p class="font-black text-gray-900 text-sm truncate">${log.EventName}</p><p class="text-[10px] text-gray-500 font-bold mt-1 bg-gray-50 inline-block px-2 rounded"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p></div><div class="text-right shrink-0"><p class="text-[9px] text-gray-400 font-bold">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p><p class="text-xs font-black text-mstPurple">${new Date(log.Timestamp).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p></div></div>`
+                        return `<div class="bg-white p-4 rounded-2xl flex items-center gap-4 shadow-sm border border-gray-100"><div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 border ${colorClass}"><i class="fas ${icon} text-lg"></i></div><div class="flex-1 min-w-0"><p class="font-black text-gray-900 text-sm truncate">${log.EventName}</p><p class="text-[10px] text-gray-500 font-bold mt-1 bg-gray-50 border border-gray-100 inline-block px-2 rounded-lg shadow-sm"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${log.Station}</p></div><div class="text-right shrink-0"><p class="text-[9px] text-gray-400 font-bold">${new Date(log.Timestamp).toLocaleDateString('th-TH')}</p><p class="text-xs font-black text-mstPurple">${new Date(log.Timestamp).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}</p></div></div>`
                     }).join('');
                 }
                 nav('historyPage');
@@ -458,12 +515,9 @@
             hideLoader();
         }
 
-        function formatTimeText(isoString) {
-            if(!isoString) return ''; const d = new Date(isoString);
-            return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-        }
+        function formatTimeText(isoString) { if(!isoString) return ''; const d = new Date(isoString); return d.toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}); }
+        function formatDistance(distMeters) { if (distMeters < 1000) { return `${Math.round(distMeters)} เมตร`; } else { return `${(distMeters / 1000).toFixed(2)} กิโลเมตร`; } }
 
-        // --- ระบบ Self Check-in ---
         async function openSelfCheckIn() {
             setLoader('โหลดกิจกรรม...');
             try {
@@ -473,7 +527,7 @@
 
                 const res = await fetch(`${GAS_URL}?action=getEvents`, { redirect: "follow" });
                 const result = await res.json();
-                activeEvents = result.data.filter(e => e.status === 'Open' && e.type === 'Self');
+                const activeEvents = result.data.filter(e => e.status === 'Open' && e.type === 'Self');
                 
                 const container = document.getElementById('selfCheckInList');
                 if(activeEvents.length === 0) { container.innerHTML = '<div class="text-center text-gray-400 mt-20"><div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm border border-gray-100"><i class="fas fa-calendar-times text-3xl opacity-50"></i></div><p class="font-bold text-sm">ไม่มีกิจกรรมให้เช็กอินด้วยตนเอง</p></div>'; }
@@ -522,25 +576,13 @@
                         <div class="bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100 text-center relative overflow-hidden">
                             <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-mstPurple to-indigo-500"></div>
                             <h4 class="font-black text-lg text-gray-900 mt-2">${evt.name}</h4><p class="text-[11px] text-gray-500 font-bold mb-4 mt-1 bg-gray-50 border border-gray-100 inline-block px-3 py-1 rounded-lg"><i class="fas fa-map-marker-alt text-mstPurple mr-1"></i> ${evt.station}</p>
-                            <div class="flex gap-3">
-                                <div class="flex-1 flex flex-col">${inBtn}${inStatus}</div>
-                                ${outSection}
-                            </div>
+                            <div class="flex gap-3"><div class="flex-1 flex flex-col">${inBtn}${inStatus}</div>${outSection}</div>
                         </div>`;
                     }).join('');
                 }
                 nav('selfCheckInPage');
             } catch(e) { Swal.fire('Error', 'โหลดกิจกรรมไม่สำเร็จ', 'error'); }
             hideLoader();
-        }
-
-        // --- ปรับปรุงการคำนวณและแสดงผลระยะทาง (เมตร -> กิโลเมตร) ---
-        function formatDistance(distMeters) {
-            if (distMeters < 1000) {
-                return `${Math.round(distMeters)} เมตร`;
-            } else {
-                return `${(distMeters / 1000).toFixed(2)} กิโลเมตร`;
-            }
         }
 
         function processSelfCheckIn(eventId, actionType) {
@@ -552,19 +594,14 @@
                     const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify(payload) }); 
                     const data = await res.json();
                     hideLoader();
-                    
                     if(data.status === 'success') { Swal.fire('สำเร็จ!', `เช็กชื่อ${actionType==='IN'?'เข้า':'ออก'} เรียบร้อยแล้ว`, 'success').then(()=> { openSelfCheckIn(); }); }
-                    else if(data.status === 'gps_error') { 
-                        // เปลี่ยนการแสดงผลให้รองรับทั้งเมตรและกิโลเมตร
-                        Swal.fire('อยู่นอกพื้นที่', `คุณอยู่ห่างจากจุดกิจกรรม <b>${formatDistance(data.dist)}</b><br><br>กรุณาเดินทางไปยังจุดเช็กอิน`, 'error'); 
-                    }
+                    else if(data.status === 'gps_error') { Swal.fire('อยู่นอกพื้นที่', `คุณอยู่ห่างจากจุดกิจกรรม <b>${formatDistance(data.dist)}</b><br><br>กรุณาเดินทางไปยังจุดเช็กอิน`, 'error'); }
                     else if(data.status.startsWith('duplicate')) { Swal.fire('แจ้งเตือน', 'คุณได้ทำรายการไปแล้ว', 'warning'); }
                     else { Swal.fire('ผิดพลาด', data.message || 'บันทึกไม่สำเร็จ', 'error'); }
                 } catch(e) { hideLoader(); Swal.fire('Error', 'เชื่อมต่อขัดข้อง', 'error'); }
             }, (error) => { hideLoader(); Swal.fire('Error', 'กรุณาอนุญาตการเข้าถึงตำแหน่ง (GPS)', 'error'); }, { enableHighAccuracy: true });
         }
 
-        // --- ระบบ STAFF สแกน ---
         async function checkAdminAuth() {
             setLoader('ตรวจสอบสิทธิ์...');
             try {
@@ -600,7 +637,6 @@
         });
 
         function exitAdmin() { stopScan(); nav('studentDashboard'); }
-
         function playErrorSound() { const audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const oscillator = audioCtx.createOscillator(); const gainNode = audioCtx.createGain(); oscillator.connect(gainNode); gainNode.connect(audioCtx.destination); oscillator.type = 'square'; oscillator.frequency.setValueAtTime(150, audioCtx.currentTime); gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime); oscillator.start(); oscillator.stop(audioCtx.currentTime + 0.3); }
 
         function openScannerOverlay() {
@@ -613,38 +649,24 @@
         function startContinuousScan() {
             isScanning = true;
             navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1920 }, height: { ideal: 1080 } } }).then(function(stream) {
-                scanStream = stream;
-                video.srcObject = stream;
-                video.setAttribute("playsinline", true);
-                video.play();
-                requestAnimationFrame(tick);
-            }).catch(function(err) {
-                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบการตั้งค่าอนุญาต', 'error');
-                stopScan();
-            });
+                scanStream = stream; video.srcObject = stream; video.setAttribute("playsinline", true); video.play(); requestAnimationFrame(tick);
+            }).catch(function(err) { Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเข้าถึงกล้องได้ กรุณาตรวจสอบการตั้งค่าอนุญาต', 'error'); stopScan(); });
         }
 
         function tick() {
             if (!isScanning) return;
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
-                canvasElement.height = video.videoHeight;
-                canvasElement.width = video.videoWidth;
+                canvasElement.height = video.videoHeight; canvasElement.width = video.videoWidth;
                 canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
                 var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
                 var code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
                 
-                if (code && code.data.startsWith("MSTSC_")) {
-                    isScanning = false;
-                    processStaffCheckIn(code.data, null);
-                } else { requestAnimationFrame(tick); }
+                if (code && code.data.startsWith("MSTSC_")) { isScanning = false; processStaffCheckIn(code.data, null); } 
+                else { requestAnimationFrame(tick); }
             } else { requestAnimationFrame(tick); }
         }
 
-        function stopScan() {
-            isScanning = false;
-            if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); }
-            $('#scannerOverlay').removeClass('flex').addClass('hidden');
-        }
+        function stopScan() { isScanning = false; if (scanStream) { scanStream.getTracks().forEach(track => track.stop()); } $('#scannerOverlay').removeClass('flex').addClass('hidden'); }
 
         function recordManualScan() {
             const manualId = $('#manualStdId').val().trim(); const evtId = $('#eventSelect').val();
@@ -664,18 +686,13 @@
                 const data = await res.json(); 
                 const actionText = actionType === 'IN' ? 'เข้า' : 'ออก';
 
-                if(data.status === 'success') { 
-                    Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false, target: swalTarget }).then(() => { resumeScan(refCode); }); 
-                } else if (data.status === 'duplicate_in' || data.status === 'duplicate_out') { 
-                    playErrorSound(); Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b>`, icon: 'warning', confirmButtonColor: '#4A148C', target: swalTarget }).then(() => { resumeScan(refCode); }); 
-                } else { Swal.fire({title: 'ผิดพลาด', text: data.message || 'ไม่พบข้อมูลในระบบ', icon: 'error', target: swalTarget}).then(() => { resumeScan(refCode); }); }
+                if(data.status === 'success') { Swal.fire({ title: `เช็กชื่อ${actionText} สำเร็จ!`, html: `<b class="text-2xl text-mstPurple">${data.student.name}</b><br><br><span class="bg-gray-100 border border-gray-200 px-4 py-2 rounded-xl text-sm font-bold">เลขที่ ${data.student.studentNum} | ${data.student.className}</span>`, icon: 'success', timer: 1500, showConfirmButton: false, target: swalTarget }).then(() => { resumeScan(refCode); }); } 
+                else if (data.status === 'duplicate_in' || data.status === 'duplicate_out') { playErrorSound(); Swal.fire({ title: 'สแกนซ้ำ!', html: `<b class="text-xl text-red-500">${data.student.name}</b>`, icon: 'warning', confirmButtonColor: '#4A148C', target: swalTarget }).then(() => { resumeScan(refCode); }); }
+                else { Swal.fire({title: 'ผิดพลาด', text: data.message || 'ไม่พบข้อมูลในระบบ', icon: 'error', target: swalTarget}).then(() => { resumeScan(refCode); }); }
             } catch (e) { Swal.fire({title: 'Error', text: 'บันทึกไม่สำเร็จ', icon: 'error', target: swalTarget}).then(() => { resumeScan(refCode); }); }
         }
 
-        function resumeScan(wasScanned) { 
-            $('#manualStdId').val(''); 
-            if(wasScanned && $('#scannerOverlay').hasClass('flex')) { setTimeout(() => { isScanning = true; requestAnimationFrame(tick); }, 300); } 
-        }
+        function resumeScan(wasScanned) { $('#manualStdId').val(''); if(wasScanned && $('#scannerOverlay').hasClass('flex')) { setTimeout(() => { isScanning = true; requestAnimationFrame(tick); }, 300); } }
     </script>
 </body>
 </html>
