@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -86,15 +85,12 @@
                                         <div class="text-[11px] text-mstPurple font-bold"><i class="fas fa-map-marker-alt"></i> เลื่อนหมุดบนแผนที่เพื่อตั้งพิกัด</div>
                                         <button type="button" onclick="getCurrentGPS()" class="bg-white text-mstPurple px-3 py-1.5 rounded-lg text-xs font-black shadow-sm border border-purple-100 hover:bg-purple-100 transition-colors"><i class="fas fa-crosshairs"></i> ดึงพิกัดจากเครื่องคุณ</button>
                                     </div>
-                                    
                                     <div id="map" class="mb-4 shadow-md border-2 border-white"></div>
-                                    
                                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                         <div><input type="text" id="c_lat" placeholder="ละติจูด (Lat)" class="w-full p-3 rounded-xl bg-white outline-none text-xs font-bold shadow-sm text-gray-500" readonly></div>
                                         <div><input type="text" id="c_lng" placeholder="ลองจิจูด (Lng)" class="w-full p-3 rounded-xl bg-white outline-none text-xs font-bold shadow-sm text-gray-500" readonly></div>
                                         <div><input type="number" id="c_radius" placeholder="รัศมี (เมตร)" value="50" class="w-full p-3 rounded-xl bg-white outline-none text-sm text-center font-black text-mstPurple shadow-sm border-2 border-purple-200"></div>
                                     </div>
-                                    <p class="text-[9px] text-gray-400 mt-2 text-center">หากนักเรียนอยู่นอกวงกลมรัศมี จะไม่สามารถเช็กอินได้</p>
                                 </div>
 
                                 <button type="submit" class="w-full bg-gray-900 text-yellow-400 py-4 rounded-2xl font-black hover:bg-black transition-colors shadow-lg mt-4 text-lg">บันทึกกิจกรรม</button>
@@ -115,7 +111,7 @@
                             <div id="userStats" class="text-center font-black text-5xl text-mstPurple bg-white py-6 rounded-3xl border border-gray-100 shadow-inner mb-4 flex flex-col items-center justify-center relative z-10"><span class="animate-pulse">0</span><span class="text-sm text-gray-400 font-bold mt-1">คนในระบบ</span></div>
                             <div class="grid grid-cols-2 gap-2 relative z-10">
                                 <button onclick="nav('usersPage')" class="bg-blue-50 text-blue-600 font-bold py-3 rounded-xl hover:bg-blue-100 transition-colors shadow-sm text-xs"><i class="fas fa-list"></i> ดูรายชื่อ</button>
-                                <button onclick="syncAllUsers()" class="bg-purple-50 text-mstPurple font-bold py-3 rounded-xl hover:bg-purple-100 transition-colors shadow-sm text-xs"><i class="fas fa-sync-alt"></i> ซิงก์ ร.ร.</button>
+                                <button onclick="triggerAutoSync()" class="bg-purple-50 text-mstPurple font-bold py-3 rounded-xl hover:bg-purple-100 transition-colors shadow-sm text-xs"><i class="fas fa-sync-alt"></i> ซิงก์ข้อมูล ร.ร.</button>
                             </div>
                         </div>
 
@@ -159,44 +155,29 @@
             if(pageId === 'usersPage') loadUsers(); 
         }
 
-        // --- แผนที่ Leaflet ---
         function initMap() {
-            if (map) return; // สร้างครั้งเดียวพอ
-            // พิกัดเริ่มต้น ร.ร.เมืองสุราษฎร์ธานี โดยประมาณ
+            if (map) return; 
             const startLat = 9.1411; const startLng = 99.3288;
             map = L.map('map').setView([startLat, startLng], 17);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             marker = L.marker([startLat, startLng], {draggable: true}).addTo(map);
             circle = L.circle([startLat, startLng], { radius: 50, color: '#4A148C', fillColor: '#7E57C2', fillOpacity: 0.3 }).addTo(map);
-
             updateFormInputs(startLat, startLng);
 
-            // เมื่อลากหมุดเสร็จ ให้ขยับวงกลมตาม
             marker.on('dragend', function(e) {
                 var pos = marker.getLatLng();
                 circle.setLatLng(pos);
                 updateFormInputs(pos.lat, pos.lng);
             });
-
-            // เมื่อพิมพ์เปลี่ยนรัศมี วงกลมก็เปลี่ยนตาม
-            $('#c_radius').on('input', function() {
-                var r = $(this).val();
-                if(r) circle.setRadius(r);
-            });
+            $('#c_radius').on('input', function() { var r = $(this).val(); if(r) circle.setRadius(r); });
         }
 
-        function updateFormInputs(lat, lng) {
-            $('#c_lat').val(lat.toFixed(6)); $('#c_lng').val(lng.toFixed(6));
-        }
+        function updateFormInputs(lat, lng) { $('#c_lat').val(lat.toFixed(6)); $('#c_lng').val(lng.toFixed(6)); }
 
         function toggleGPS(show) { 
             if(show) { 
                 $('#gpsSettings').hide().removeClass('hidden').slideDown(300); 
-                setTimeout(() => { initMap(); map.invalidateSize(); }, 300); // ต้อง invalidateSize ตอนโชว์กล่อง
+                setTimeout(() => { initMap(); map.invalidateSize(); }, 300); 
             } else { $('#gpsSettings').slideUp(300); } 
         }
         
@@ -210,11 +191,10 @@
                     updateFormInputs(lat, lng);
                     if(map) { map.setView([lat, lng], 18); marker.setLatLng([lat, lng]); circle.setLatLng([lat, lng]); }
                     Swal.fire({ title: 'สำเร็จ', text: 'ดึงพิกัด GPS เรียบร้อย', icon: 'success', timer: 1500, showConfirmButton: false });
-                }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์', 'error'); }, { enableHighAccuracy: true });
+                }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์ของคุณ', 'error'); }, { enableHighAccuracy: true });
             } else { Swal.fire('ผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบ GPS', 'error'); }
         }
 
-        // --- ล็อกอิน ---
         $('#adminLoginForm').on('submit', async function(e) {
             e.preventDefault(); Swal.fire({ title: 'กำลังตรวจสอบ...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
@@ -233,7 +213,6 @@
 
         function logoutAdmin() { sessionStorage.removeItem("adminName"); location.reload(); }
 
-        // --- สร้างกิจกรรม ---
         $('#createEventForm').on('submit', async function(e) {
             e.preventDefault(); Swal.fire({ title: 'กำลังบันทึก...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             const payload = { action: 'createEvent', name: $('#c_evtName').val(), station: $('#c_stnName').val(), type: $('input[name="c_type"]:checked').val(), lat: $('#c_lat').val(), lng: $('#c_lng').val(), radius: $('#c_radius').val(), inStart: $('#c_inStart').val(), inEnd: $('#c_inEnd').val(), allowOut: $('#c_allowOut').is(':checked'), outStart: $('#c_outStart').val(), outEnd: $('#c_outEnd').val() };
@@ -280,7 +259,7 @@
         }
 
         async function loadUsers() {
-            Swal.fire({ title: 'กำลังโหลด...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังโหลดข้อมูลนักเรียน...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); const result = await res.json();
                 if(result.data.length === 0) { $('#usersTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 font-bold">ยังไม่มีนักเรียนลงทะเบียน</td></tr>`); } 
@@ -289,80 +268,25 @@
             } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดรายชื่อได้', 'error'); }
         }
 
-        // --- ระบบ Sync ข้อมูล (ดึงจากเว็บ ร.ร. แล้วเช็กทุกคน) ---
-        function cleanExcelRoomString(val) {
-            if(!val) return "ไม่ระบุ"; let str = val.toString().trim();
-            if(str.match(/^\d{4}-\d{2}-\d{2}/) || str.includes("GMT") || str.includes("Z")) { let d = new Date(str); if(!isNaN(d)) return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
-            if(!isNaN(str) && Number(str) > 40000) { let d = new Date(Math.round((Number(str) - 25569) * 86400 * 1000)); return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
-            let m = str.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/); if(m) return "ม." + m[1].replace(/\s/g, ''); return str;
-        }
-
-        async function syncAllUsers() {
-            Swal.fire({ title: 'กำลังโหลดข้อมูลจากเว็บโรงเรียน...', text: 'กระบวนการนี้อาจใช้เวลา 1-2 นาที กรุณาอย่าปิดหน้าจอ', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-            
+        // ระบบสั่งซิงก์ออโต้บน Backend 
+        async function triggerAutoSync() {
+            Swal.fire({ title: 'กำลังซิงก์ข้อมูล...', text: 'เซิร์ฟเวอร์กำลังดึงข้อมูลจากเว็บโรงเรียนมาเปรียบเทียบ อาจใช้เวลาสักครู่', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
-                // 1. ดึงข้อมูล User จาก GAS ก่อน
-                const resGas = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); 
-                const gasUsers = (await resGas.json()).data;
-                if(gasUsers.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีคนในระบบให้ซิงก์', 'info');
-
-                // 2. ดึงข้อมูล Excel 
-                const webResponse = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent("http://www.mst.ac.th/index.php")}`);
-                const docHtml = new DOMParser().parseFromString(await webResponse.text(), "text/html");
-                const targetLink = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
-                if(!targetLink) throw new Error("ไม่พบลิงก์ฐานข้อมูล");
-                const fileId = targetLink.href.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
-                const resp = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`)}`);
-                const wb = XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: 'array' });
-                
-                // แปลง Excel เป็น Data แบนๆ เพื่อง่ายต่อการค้นหา
-                let allSchoolStudents = [];
-                wb.SheetNames.forEach((sn, i) => {
-                    if (wb.Workbook?.Sheets?.[i]?.Hidden) return;
-                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
-                    let currentRoom = "ไม่ระบุ"; 
-                    rows.forEach(r => {
-                        let roomCell = r.find(c => (typeof c === 'string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/)) || (c instanceof Date || (typeof c === 'number' && c > 40000)));
-                        if(roomCell) currentRoom = cleanExcelRoomString(roomCell);
-                        
-                        // หารหัส 5 หลักในบรรทัดนั้น (สมมุติว่ามันมีความยาว 5 หลักพอดี)
-                        let idIdx = r.findIndex(c => /^\d{5}$/.test(c.toString().trim()));
-                        if(idIdx !== -1) {
-                            let sNum = idIdx > 0 ? r[idIdx-1].toString().trim() : "-";
-                            allSchoolStudents.push({ id: r[idIdx].toString().trim(), num: sNum, class: currentRoom });
-                        }
-                    });
-                });
-
-                // 3. เปรียบเทียบ
-                let updatesToSend = [];
-                gasUsers.forEach(u => {
-                    // หาเฉพาะคนที่มีรหัสนักเรียน (ถ้าไม่มีข้ามไปก่อน)
-                    if(u.studentId && u.studentId !== "") {
-                        const foundInSchool = allSchoolStudents.find(s => s.id === u.studentId);
-                        if (foundInSchool) {
-                            // อัปเดตชั้น/เลขที่ให้เป็นปัจจุบัน
-                            updatesToSend.push({ uid: u.uid, status: "Active", className: foundInSchool.class, studentNum: foundInSchool.num });
-                        } else {
-                            // ไม่เจอใน ร.ร. = พ้นสภาพ
-                            updatesToSend.push({ uid: u.uid, status: "พ้นสภาพ", className: u.class, studentNum: u.studentNum });
-                        }
-                    }
-                });
-
-                // 4. ส่งกลับไปบันทึก
-                Swal.fire({ title: 'กำลังอัปเดตฐานข้อมูลสภาฯ...', text: `เตรียมอัปเดตข้อมูล ${updatesToSend.length} รายการ`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-                await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'bulkSyncUsers', updates: updatesToSend }) });
-                
-                Swal.fire('สำเร็จ', 'อัปเดตรายชื่อนักเรียนและสถานะให้เป็นปัจจุบันเรียบร้อย', 'success').then(()=> loadDashboard());
-            } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถซิงก์ข้อมูลได้: ' + err.message, 'error'); }
+                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', body: JSON.stringify({ action: 'triggerAutoSync' }) });
+                const result = await res.json();
+                if(result.status === 'success') {
+                    Swal.fire('สำเร็จ', 'ซิงก์ข้อมูลเสร็จสมบูรณ์แล้ว!', 'success').then(() => { loadDashboard(); });
+                } else {
+                    Swal.fire('ผิดพลาด', 'ซิงก์ไม่สำเร็จ', 'error');
+                }
+            } catch(err) { Swal.fire('ผิดพลาด', 'เซิร์ฟเวอร์ไม่ตอบสนอง', 'error'); }
         }
 
         async function downloadLogsCSV() {
-            Swal.fire({ title: 'กำลังสร้างไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังสร้างไฟล์ CSV...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); Swal.close();
-                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติ', 'info');
+                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการเช็กอินในระบบ', 'info');
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,Station,Action,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
                 result.data.forEach(r => { csvContent += `${new Date(r.Timestamp).toLocaleString('th-TH')},${r.EventName},${r.Station},${r.Action},${r.RefCode},${r.StudentName},${r.Class},${r.StudentNum},${r.StudentID},${r.ScannerName}\n`; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `MSTSC_Logs_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
