@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Master Admin - Digital ID</title>
     <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -155,6 +156,7 @@
             if(pageId === 'usersPage') loadUsers(); 
         }
 
+        // --- แผนที่ Leaflet ---
         function initMap() {
             if (map) return; 
             const startLat = 9.1411; const startLng = 99.3288;
@@ -191,7 +193,7 @@
                     updateFormInputs(lat, lng);
                     if(map) { map.setView([lat, lng], 18); marker.setLatLng([lat, lng]); circle.setLatLng([lat, lng]); }
                     Swal.fire({ title: 'สำเร็จ', text: 'ดึงพิกัด GPS เรียบร้อย', icon: 'success', timer: 1500, showConfirmButton: false });
-                }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์ของคุณ', 'error'); }, { enableHighAccuracy: true });
+                }, (error) => { Swal.fire('ผิดพลาด', 'กรุณาอนุญาตการเข้าถึงตำแหน่งที่ตั้ง (GPS) ในเบราว์เซอร์', 'error'); }, { enableHighAccuracy: true });
             } else { Swal.fire('ผิดพลาด', 'อุปกรณ์นี้ไม่รองรับระบบ GPS', 'error'); }
         }
 
@@ -234,7 +236,7 @@
                             <td class="px-4 py-4"><span class="bg-gray-100 border border-gray-200 text-gray-600 px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.type}</span></td>
                             <td class="px-4 py-4"><span class="${e.status==='Open' ? 'text-green-600 bg-green-50 border-green-200' : 'text-red-600 bg-red-50 border-red-200'} border px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest">${e.status}</span></td>
                             <td class="px-5 py-4 text-right flex gap-2 justify-end">
-                                <button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 text-xs shadow-sm"><i class="fas fa-exchange-alt"></i></button>
+                                <button onclick="toggleEvent('${e.id}')" class="bg-white border border-gray-200 text-mstPurple font-bold px-3 py-1.5 rounded-lg hover:bg-purple-50 text-xs shadow-sm"><i class="fas fa-exchange-alt mr-1"></i> เปิด/ปิด</button>
                                 <button onclick="deleteEvent('${e.id}')" class="bg-red-50 border border-red-100 text-red-500 font-bold w-8 h-8 rounded-lg hover:bg-red-100 text-xs shadow-sm"><i class="fas fa-trash-alt"></i></button>
                             </td>
                         </tr>`).join(''));
@@ -263,30 +265,96 @@
             try {
                 const res = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); const result = await res.json();
                 if(result.data.length === 0) { $('#usersTableBody').html(`<tr><td colspan="4" class="px-5 py-8 text-center text-gray-400 font-bold">ยังไม่มีนักเรียนลงทะเบียน</td></tr>`); } 
-                else { $('#usersTableBody').html(result.data.map(u => `<tr class="hover:bg-gray-50 transition-colors"><td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td><td class="px-4 py-3 font-black text-gray-900">${u.name}</td><td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class} เลขที่ ${u.studentNum}</td><td class="px-4 py-3 text-[10px] font-bold">${u.status === 'Active' ? '<span class="text-green-500 bg-green-50 px-2 py-1 rounded">ปกติ</span>' : '<span class="text-red-500 bg-red-50 px-2 py-1 rounded">พ้นสภาพ</span>'}</td></tr>`).join('')); }
+                else { $('#usersTableBody').html(result.data.map(u => `<tr class="hover:bg-gray-50 transition-colors"><td class="px-5 py-3 font-mono text-gray-500 font-bold">${u.studentId || '-'}</td><td class="px-4 py-3 font-black text-gray-900">${u.name}</td><td class="px-4 py-3 text-sm font-bold text-mstPurple">${u.class} เลขที่ ${u.studentNum}</td><td class="px-4 py-3 text-[10px] font-bold">${u.status === 'Active' ? '<span class="text-green-500 bg-green-50 px-2 py-1 rounded border border-green-100">ปกติ</span>' : '<span class="text-red-500 bg-red-50 px-2 py-1 rounded border border-red-100">พ้นสภาพ</span>'}</td></tr>`).join('')); }
                 Swal.close();
             } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถโหลดรายชื่อได้', 'error'); }
         }
 
-        // ระบบสั่งซิงก์ออโต้บน Backend 
+        // --- ระบบ Sync ข้อมูลอัจฉริยะ (ใช้ Cloudflare Proxy จากฝั่งแอดมิน เพื่อความเสถียร 100%) ---
+        function cleanExcelRoomString(val) {
+            if(!val) return "ไม่ระบุ"; let str = val.toString().trim();
+            if(str.match(/^\d{4}-\d{2}-\d{2}/) || str.includes("GMT") || str.includes("Z")) { let d = new Date(str); if(!isNaN(d)) return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
+            if(!isNaN(str) && Number(str) > 40000) { let d = new Date(Math.round((Number(str) - 25569) * 86400 * 1000)); return "ม." + (d.getMonth() + 1) + "/" + d.getDate(); }
+            let m = str.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/); if(m) return "ม." + m[1].replace(/\s/g, ''); return str;
+        }
+
         async function triggerAutoSync() {
-            Swal.fire({ title: 'กำลังซิงก์ข้อมูล...', text: 'เซิร์ฟเวอร์กำลังดึงข้อมูลจากเว็บโรงเรียนมาเปรียบเทียบ อาจใช้เวลาสักครู่', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังโหลดข้อมูลจากเว็บ ร.ร....', text: 'ระบบกำลังดึงข้อมูลล่าสุด (อาจใช้เวลา 1-2 นาที)', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            
             try {
-                const res = await fetch(GAS_URL, { redirect: "follow", method: 'POST', body: JSON.stringify({ action: 'triggerAutoSync' }) });
-                const result = await res.json();
-                if(result.status === 'success') {
-                    Swal.fire('สำเร็จ', 'ซิงก์ข้อมูลเสร็จสมบูรณ์แล้ว!', 'success').then(() => { loadDashboard(); });
-                } else {
-                    Swal.fire('ผิดพลาด', 'ซิงก์ไม่สำเร็จ', 'error');
+                // 1. ดึงข้อมูล User จาก GAS ก่อน
+                const resGas = await fetch(`${GAS_URL}?action=getAllUsers`, { redirect: "follow" }); 
+                const gasUsers = (await resGas.json()).data;
+                if(gasUsers.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีคนในระบบให้ซิงก์', 'info');
+
+                // 2. ดึงข้อมูล Excel ผ่าน Proxy
+                const webResponse = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent("http://www.mst.ac.th/index.php")}`);
+                const docHtml = new DOMParser().parseFromString(await webResponse.text(), "text/html");
+                const targetLink = Array.from(docHtml.querySelectorAll('a')).find(a => a.textContent.includes('รายชื่อนักเรียน'));
+                if(!targetLink) throw new Error("ไม่พบลิงก์ฐานข้อมูลบนเว็บโรงเรียน");
+                const fileId = targetLink.href.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
+                const resp = await fetch(`https://mst-proxy.studentcouncil-f38.workers.dev/?url=${encodeURIComponent(`https://docs.google.com/spreadsheets/d/${fileId}/export?format=xlsx`)}`);
+                const wb = XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: 'array' });
+                
+                let allSchoolStudents = [];
+                wb.SheetNames.forEach((sn, i) => {
+                    if (wb.Workbook?.Sheets?.[i]?.Hidden) return;
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, defval: "" });
+                    let currentRoom = "ไม่ระบุ"; 
+                    rows.forEach(r => {
+                        let roomCell = r.find(c => (typeof c === 'string' && c.match(/(?:ม\.|ปีที่\s*)?(\d+\s?\/\s?\d+)/)) || (c instanceof Date || (typeof c === 'number' && c > 40000)));
+                        if(roomCell) currentRoom = cleanExcelRoomString(roomCell);
+                        
+                        // หารหัส 5 หลัก (เปรียบเทียบเป็น Text เพื่อป้องกันบัค 0 หาย)
+                        let idIdx = r.findIndex(c => c != null && String(c).trim().match(/^\d{5}$/));
+                        if(idIdx !== -1) {
+                            let sNum = idIdx > 0 ? String(r[idIdx-1]).trim() : "-";
+                            allSchoolStudents.push({ id: String(r[idIdx]).trim(), num: sNum, class: currentRoom });
+                        }
+                    });
+                });
+
+                // 3. เปรียบเทียบ
+                let updatesToSend = [];
+                gasUsers.forEach(u => {
+                    if(u.studentId && String(u.studentId).match(/^\d{5}$/)) {
+                        const foundInSchool = allSchoolStudents.find(s => s.id === String(u.studentId).trim());
+                        if (foundInSchool) {
+                            // ถ้ามีการเปลี่ยนห้อง/เลขที่ ถึงจะส่งอัปเดต หรือถ้าเคยพ้นสภาพก็ให้กลับมา Active
+                            if (u.class !== foundInSchool.class || u.studentNum !== foundInSchool.num || u.status === 'พ้นสภาพ') {
+                                updatesToSend.push({ uid: u.uid, status: "Active", className: foundInSchool.class, studentNum: foundInSchool.num });
+                            }
+                        } else {
+                            if (u.status !== 'พ้นสภาพ') {
+                                updatesToSend.push({ uid: u.uid, status: "พ้นสภาพ", className: u.class, studentNum: u.studentNum });
+                            }
+                        }
+                    }
+                });
+
+                if (updatesToSend.length === 0) {
+                    return Swal.fire('อัปเดตล่าสุดแล้ว', 'ข้อมูลนักเรียนทุกคนตรงกับฐานข้อมูลของโรงเรียนอยู่แล้วครับ', 'success').then(() => loadDashboard());
                 }
-            } catch(err) { Swal.fire('ผิดพลาด', 'เซิร์ฟเวอร์ไม่ตอบสนอง', 'error'); }
+
+                // 4. ส่งกลับไปบันทึก
+                Swal.fire({ title: 'กำลังอัปเดตฐานข้อมูลสภาฯ...', text: `เตรียมอัปเดตข้อมูล ${updatesToSend.length} รายการ`, allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                const updateRes = await fetch(GAS_URL, { redirect: "follow", method: 'POST', headers: {"Content-Type": "text/plain;charset=utf-8"}, body: JSON.stringify({ action: 'bulkSyncUsers', updates: updatesToSend }) });
+                const updateData = await updateRes.json();
+                
+                if (updateData.status === 'success') {
+                    Swal.fire('สำเร็จ', `อัปเดตสถานะและเลื่อนชั้นนักเรียน ${updatesToSend.length} รายการ เรียบร้อย`, 'success').then(()=> loadDashboard());
+                } else {
+                    throw new Error("เกิดข้อผิดพลาดในการบันทึกลงฐานข้อมูล");
+                }
+
+            } catch(err) { Swal.fire('ผิดพลาด', 'ไม่สามารถซิงก์ข้อมูลได้: ' + err.message, 'error'); }
         }
 
         async function downloadLogsCSV() {
-            Swal.fire({ title: 'กำลังสร้างไฟล์ CSV...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+            Swal.fire({ title: 'กำลังสร้างไฟล์...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
             try {
                 const res = await fetch(`${GAS_URL}?action=getLogs`, { redirect: "follow" }); const result = await res.json(); Swal.close();
-                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติการเช็กอินในระบบ', 'info');
+                if(result.data.length === 0) return Swal.fire('แจ้งเตือน', 'ยังไม่มีประวัติ', 'info');
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFFTimestamp,EventName,Station,Action,RefCode,StudentName,Class,Number,StudentID,ScannerName\n";
                 result.data.forEach(r => { csvContent += `${new Date(r.Timestamp).toLocaleString('th-TH')},${r.EventName},${r.Station},${r.Action},${r.RefCode},${r.StudentName},${r.Class},${r.StudentNum},${r.StudentID},${r.ScannerName}\n`; });
                 const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `MSTSC_Logs_${new Date().toISOString().split('T')[0]}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
