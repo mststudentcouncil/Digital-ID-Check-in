@@ -36,7 +36,7 @@
         .flip-card-back { transform: rotateY(180deg); }
 
         /* ลายน้ำ + Hologram จัดกลางสวยๆ */
-        .watermark-bg { position: absolute; inset: 0; background-image: url('https://i.ibb.co/GQYCbXrc/logo.webp'); background-size: 55%; background-repeat: no-repeat; background-position: center; opacity: 0.08; pointer-events: none; z-index: 0; }
+        .watermark-bg { position: absolute; inset: 0; background-image: url('https://i.ibb.co/JWBqGL4G/Muang-ST2020.jpg'); background-size: 55%; background-repeat: no-repeat; background-position: center; opacity: 0.08; pointer-events: none; z-index: 0; }
         .holo-effect { position: absolute; inset: 0; background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,0.8) 50%, transparent 80%); background-size: 200% 200%; animation: holoShine 4s infinite linear; pointer-events: none; z-index: 50; mix-blend-mode: overlay; }
         @keyframes holoShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
@@ -191,22 +191,26 @@
     </div>
 </div>
 
-                        <div class="flip-card-back flex flex-col items-center justify-center p-3 z-10 shadow-inner bg-white">
+                        <div class="flip-card-back flex flex-col items-center justify-start z-10 shadow-inner bg-gray-50 border border-gray-200">
     <div class="watermark-bg"></div>
     
-    <div class="relative z-20 w-full flex flex-col items-center justify-center h-full">
-        <h3 class="text-[9px] font-black text-mstPurple mb-2 tracking-[0.1em] uppercase bg-purple-50 px-3 py-1 rounded-lg"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
-        
-        <div class="bg-white p-1 rounded-lg border border-gray-100 w-[80%] max-w-[200px] flex justify-center mb-2">
+    <div class="w-full bg-gray-800 text-white text-center py-1.5 z-20 shadow-sm rounded-t-xl">
+        <p class="text-[9px] font-black tracking-[0.2em] uppercase"><i class="fas fa-qrcode text-mstYellow"></i> Scan for Attendance</p>
+    </div>
+    
+    <div class="relative z-20 w-full flex flex-col items-center justify-center flex-1 py-1">
+        <div class="bg-white px-3 py-1 rounded border border-gray-200 shadow-sm mb-2 w-[75%] max-w-[200px] flex justify-center">
             <svg id="barcode" class="w-full max-h-10"></svg>
         </div>
         
-        <div class="bg-white p-1.5 rounded-xl border border-gray-100 shadow-sm relative group hover:scale-105 transition-transform cursor-pointer" onclick="event.stopPropagation(); expandQR();">
-            <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto scale-90 origin-center"></div>
-            <div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-xl drop-shadow-md"></i></div>
+        <div class="bg-white p-2 rounded-lg border border-gray-200 shadow-sm relative group cursor-pointer hover:shadow-md transition-all" onclick="event.stopPropagation(); expandQR();">
+            <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto"></div>
+            <div class="absolute inset-0 bg-black/40 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fas fa-expand text-white text-xl drop-shadow-md"></i>
+            </div>
         </div>
         
-        <p id="cardRef" class="text-[9px] text-gray-500 mt-2 font-mono font-bold tracking-widest bg-gray-50 px-3 py-1 rounded-lg border border-gray-100"></p>
+        <p id="cardRef" class="text-[9px] text-gray-500 mt-2 font-mono font-bold tracking-[0.1em] bg-white px-3 py-0.5 rounded-full border border-gray-200 shadow-sm"></p>
     </div>
 </div>
                     </div>
@@ -457,7 +461,7 @@
             JsBarcode("#barcode", codeToBar, { format: "CODE128", width: 2, height: 40, displayValue: true, fontSize: 12, margin: 0 });
 
             if(qrCodeObj) qrCodeObj.clear(); $('#qrcode').empty();
-qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 90, height: 90, colorDark : "#1f2937", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });            $('#cardRef').text(userData.refCode);
+            qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 100, height: 100, colorDark : "#1f2937", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
         }
         
         window.expandQR = function() {
