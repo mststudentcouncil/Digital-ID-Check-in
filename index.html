@@ -29,10 +29,10 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
         /* 3D Flip Card */
-        .flip-card { perspective: 1000px; width: 100%; height: 420px; }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
-        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
-        .flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 2.5rem; overflow: hidden; background-color: white; }
+.flip-card { perspective: 1000px; width: 100%; max-width: 400px; aspect-ratio: 85.6 / 54; margin: 0 auto; }
+.flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
+.flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+.flip-card-front, .flip-card-back { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 12px; overflow: hidden; background-color: white; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .flip-card-back { transform: rotateY(180deg); }
 
         /* ลายน้ำ + Hologram จัดกลางสวยๆ */
@@ -158,35 +158,57 @@
 
                 <div class="flip-card mb-6 cursor-pointer" onclick="this.classList.toggle('flipped')">
                     <div class="flip-card-inner shadow-2xl rounded-[2.5rem] bg-white border border-gray-100">
-                        <div class="flip-card-front flex flex-col items-center justify-center p-6 z-20">
-                            <div class="watermark-bg"></div> <div class="holo-effect rounded-[2.5rem]"></div> <div class="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-purple-50 to-transparent -z-10 rounded-t-[2.5rem]"></div>
-                            <p class="absolute top-4 right-5 text-gray-400 text-[10px] font-bold bg-white/50 px-2 py-1 rounded-full"><i class="fas fa-sync-alt"></i> แตะเพื่อพลิก</p>
-                            
-                            <img id="profileImage" src="" class="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover bg-gray-100 relative z-20 mt-2">
-                            <h2 id="cardName" class="text-2xl font-black text-gray-900 mt-5 leading-tight text-center px-4 relative z-20 w-full truncate drop-shadow-sm"></h2>
-                            
-                            <div class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl px-6 py-4 mt-5 flex gap-5 text-center shadow-sm relative z-20 w-full justify-center">
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">รหัส</p><p id="cardStdId" class="font-black text-mstPurple font-mono text-lg"></p></div>
-                                <div class="w-px bg-gray-200"></div>
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">ชั้น</p><p id="cardClass" class="font-black text-mstPurple text-lg"></p></div>
-                                <div class="w-px bg-gray-200"></div>
-                                <div><p class="text-[9px] text-gray-400 font-bold uppercase tracking-widest">เลขที่</p><p id="cardNum" class="font-black text-mstPurple text-lg"></p></div>
-                            </div>
-                        </div>
+                        <div class="flip-card-front flex flex-row items-center p-4 z-20 bg-gradient-to-br from-white to-gray-50">
+    <div class="watermark-bg"></div> <div class="holo-effect rounded-xl"></div> 
+    
+    <div class="absolute top-0 left-0 w-full h-10 bg-mstPurple -z-10 rounded-t-xl flex items-center px-4">
+        <span class="text-white text-[10px] font-bold tracking-widest">STUDENT ID CARD</span>
+    </div>
+    <p class="absolute top-2.5 right-4 text-white text-[9px] font-bold"><i class="fas fa-sync-alt"></i> พลิก</p>
+    
+    <div class="w-[35%] mt-6 flex justify-center">
+        <img id="profileImage" src="" class="w-[75px] h-[100px] rounded border border-gray-200 shadow-sm object-cover bg-gray-100 relative z-20">
+    </div>
+    
+    <div class="w-[65%] flex flex-col text-left pl-3 mt-6 relative z-20">
+        <p class="text-[9px] text-gray-500 font-bold mb-0.5">ชื่อ-นามสกุล</p>
+        <h2 id="cardName" class="text-base font-black text-gray-900 leading-tight w-full truncate mb-2"></h2>
+        
+        <div class="grid grid-cols-2 gap-y-2 gap-x-1 text-left w-full mt-1">
+            <div class="col-span-2">
+                <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">รหัสประจำตัว</p>
+                <p id="cardStdId" class="font-black text-mstPurple font-mono text-sm leading-none"></p>
+            </div>
+            <div>
+                <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">ระดับชั้น</p>
+                <p id="cardClass" class="font-black text-gray-800 text-xs leading-none"></p>
+            </div>
+            <div>
+                <p class="text-[8px] text-gray-400 font-bold uppercase tracking-widest">เลขที่</p>
+                <p id="cardNum" class="font-black text-gray-800 text-xs leading-none"></p>
+            </div>
+        </div>
+    </div>
+</div>
 
-                        <div class="flip-card-back flex flex-col items-center justify-center p-6 z-10 shadow-inner">
-                            <div class="watermark-bg"></div>
-                            
-                            <div class="relative z-20 w-full flex flex-col items-center">
-                                <h3 class="text-[10px] font-black text-mstPurple mb-3 tracking-[0.2em] uppercase bg-purple-50 px-3 py-1 rounded-lg"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
-                                <div class="bg-white p-2 rounded-xl border border-gray-100 shadow-sm w-full flex justify-center mb-5"><svg id="barcode" class="w-full max-h-14"></svg></div>
-                                <div class="bg-white p-3 rounded-2xl border border-gray-100 shadow-md relative group hover:scale-105 transition-transform" onclick="event.stopPropagation(); expandQR();">
-                                    <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto"></div>
-                                    <div class="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-2xl drop-shadow-md"></i></div>
-                                </div>
-                                <p id="cardRef" class="text-[10px] text-gray-500 mt-4 font-mono font-bold tracking-widest bg-gray-50 px-4 py-1.5 rounded-xl border border-gray-100"></p>
-                            </div>
-                        </div>
+                        <div class="flip-card-back flex flex-col items-center justify-center p-3 z-10 shadow-inner bg-white">
+    <div class="watermark-bg"></div>
+    
+    <div class="relative z-20 w-full flex flex-col items-center justify-center h-full">
+        <h3 class="text-[9px] font-black text-mstPurple mb-2 tracking-[0.1em] uppercase bg-purple-50 px-3 py-1 rounded-lg"><i class="fas fa-qrcode"></i> Scan for Attendance</h3>
+        
+        <div class="bg-white p-1 rounded-lg border border-gray-100 w-[80%] max-w-[200px] flex justify-center mb-2">
+            <svg id="barcode" class="w-full max-h-10"></svg>
+        </div>
+        
+        <div class="bg-white p-1.5 rounded-xl border border-gray-100 shadow-sm relative group hover:scale-105 transition-transform cursor-pointer" onclick="event.stopPropagation(); expandQR();">
+            <div id="qrcode" class="flex items-center justify-center pointer-events-none mx-auto scale-90 origin-center"></div>
+            <div class="absolute inset-0 bg-black/40 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><i class="fas fa-expand text-white text-xl drop-shadow-md"></i></div>
+        </div>
+        
+        <p id="cardRef" class="text-[9px] text-gray-500 mt-2 font-mono font-bold tracking-widest bg-gray-50 px-3 py-1 rounded-lg border border-gray-100"></p>
+    </div>
+</div>
                     </div>
                 </div>
                 
@@ -435,8 +457,7 @@
             JsBarcode("#barcode", codeToBar, { format: "CODE128", width: 2, height: 40, displayValue: true, fontSize: 12, margin: 0 });
 
             if(qrCodeObj) qrCodeObj.clear(); $('#qrcode').empty();
-            qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 140, height: 140, colorDark : "#1f2937", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });
-            $('#cardRef').text(userData.refCode);
+qrCodeObj = new QRCode(document.getElementById("qrcode"), { text: userData.refCode, width: 90, height: 90, colorDark : "#1f2937", colorLight : "#ffffff", correctLevel : QRCode.CorrectLevel.H });            $('#cardRef').text(userData.refCode);
         }
         
         window.expandQR = function() {
